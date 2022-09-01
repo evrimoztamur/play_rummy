@@ -1,5 +1,14 @@
-from collections import defaultdict
 import random
+import sys
+
+
+def eprint(message):
+    print(f"\x1b[1;31m{message}\x1b[0m", file=sys.stderr)
+
+
+def sprint(message):
+    print(f"\x1b[1;32m{message}\x1b[0m", file=sys.stderr)
+
 
 CARD_SUITS = ["♣", "♦", "♥", "♠"]
 CARD_RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
