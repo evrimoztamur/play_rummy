@@ -318,25 +318,57 @@ game = Game(4)
 game.shuffle_cards()
 
 hand = game.draw_many(13)
-hand.sort(key=lambda c: c.index % NUM_CARDS_PER_DECK)
+hand.sort(key=lambda c: c.index)
 
-for i, card in enumerate(hand):
+
+def print_hand(cards):
+    for i, card in enumerate(cards):
     print(f"{i: >2} {card}")
 
-while choice := input():
-    if choice == "q":
+
+print_hand(hand)
+
+while query := input():
+    if not query or query == "q":
         break
 
-    choices = [choice.strip() for choice in choice.split(",")]
+    query = [x.strip() for x in query.split(" ")]
+    command = query[0].lower()
+    params = query[1:]
 
-    meld = [hand[int(i)] for i in choices]
+    if command == "m":
+        indices = [int(i) for i in params]
+        meld = [hand[i] for i in indices]
 
     try:
-        print(Game.validate_set(meld))
+            score = Game.validate_set(meld)
+
+            print(f"Set {meld}")
+
+            hand = [card for i, card in enumerate(hand) if i not in indices]
     except InvalidMeld as e:
-        print(f"Not a set")
+            eprint(f"Not a set")
 
     try:
-        print(Game.validate_run(meld))
+            runs = Game.discover_runs(meld)
+
+            print(f"Runs {runs}")
+
+            hand = [card for i, card in enumerate(hand) if i not in indices]
     except InvalidMeld as e:
-        print(f"Not a run")
+            eprint(f"Not a run")
+
+        print_hand(hand)
+    elif command == "d":
+        discard_card = hand.pop(int(params[0]))
+
+        print(f"Discarded {discard_card}")
+
+        draw_card = game.draw_card()
+
+        hand.append(draw_card)
+        hand.sort(key=lambda c: c.index)
+
+        print(f"Drew {draw_card}\n")
+
+        print_hand(hand)
