@@ -29,11 +29,15 @@ class Card:
         deck_index = card_index % NUM_CARDS_PER_DECK
 
         if deck_index >= NUM_SUIT_CARDS:
-            return Card(NUM_SUITS, deck_index - NUM_SUIT_CARDS)
+            return Card.joker()
         else:
             card_suit = deck_index // NUM_RANKS
             card_rank = deck_index % NUM_RANKS
             return Card(card_suit, card_rank)
+
+    @staticmethod
+    def joker():
+        return Card(NUM_SUITS, 0)
 
     @staticmethod
     def reverse_notation(notation):
@@ -97,10 +101,6 @@ class Card:
         return [card for card in cards if card.is_common]
 
     @staticmethod
-    def aces_of(cards):
-        return [card for card in cards if card.is_ace]
-        
-    @staticmethod
     def first_ace(cards):
         return next((card for card in cards if card.is_ace), None)
 
@@ -158,7 +158,7 @@ class Game:
             raise InvalidMeld("duplicate cards")
 
         if len(cards) < 3 or len(cards) > 4:
-            raise InvalidMeld("not of length 3 or 4")
+            raise InvalidMeld(f"not of length 3 or 4 ({len(cards)})")
 
         regulars = Card.regulars_of(cards)
 
@@ -171,17 +171,61 @@ class Game:
         return regulars[0].score * len(cards)
 
     @staticmethod
-    def validate_run(cards):
+    def validate_run(cards, num_jokers):
+        available_jokers = num_jokers
+        run = [cards.pop(0)]
+
+        for card in cards:
+            if run[-1].is_joker:
+                rank_change = 1
+            else:
+                rank_change = card.rank - run[-1].rank
+
+            if rank_change > 1:
+                if available_jokers >= rank_change - 1:
+                    run.extend([Card.joker()] * (rank_change - 1))
+                    available_jokers -= rank_change - 1
+                else:
+                    return None
+            elif not (rank_change == 1 or rank_change == -NUM_RANKS + 1):
+                return None
+
+            run.append(card)
+
+        min_rank = run[0].rank
+        max_rank = run[-1].rank
+
+        if run[0].is_ace:
+            min_rank = -1
+
+        left_pad = min_rank + 1
+        right_pad = NUM_RANKS - max_rank - 1
+
+        right_waterfall = min(available_jokers, right_pad)
+        available_jokers -= right_waterfall
+        left_waterfall = min(available_jokers, left_pad)
+
+        run = [
+            *([Card.joker()] * left_waterfall),
+            *run,
+            *([Card.joker()] * right_waterfall),
+        ]
+
+        return run
+
+    @staticmethod
+    def discover_runs(cards):
         if Card.has_duplicates(cards):
             raise InvalidMeld("duplicate cards")
 
         if len(cards) < 3 or len(cards) > NUM_RANKS:
-            raise InvalidMeld(f"not of length 3 to {NUM_RANKS}")
+            raise InvalidMeld(f"not of length 3 to {NUM_RANKS} ({len(cards)})")
 
         regulars = Card.regulars_of(cards)
         commons = Card.commons_of(cards)
+        jokers = Card.jokers_of(cards)
 
-        if len(commons) < 2:
+        if len(jokers) > len(commons):
             raise InvalidMeld("too few regular cards")
 
         if Card.are_suits_matching(regulars):
@@ -189,7 +233,6 @@ class Game:
 
         sorted_commons = Card.sort_by_rank(commons)
 
-        jokers = Card.jokers_of(cards)
         ace = Card.first_ace(cards)
 
         if not ace:
@@ -197,52 +240,13 @@ class Game:
         else:
             runs = [[ace, *sorted_commons], [*sorted_commons, ace]]
 
-        validated_runs = []
+        runs = [Game.validate_run(run, len(jokers)) for run in runs]
+        runs = [run for run in runs if run]
 
-        for run in runs:
-            available_jokers = [*jokers]
-            validated_run = []
-
-            for card in run:
-                # print(f"{i: >3} {card}")
-
-                if len(validated_run) > 0:
-                    if validated_run[-1].is_joker:
-                        # print("Joker")
-                        rank_change = 1
-                    else:
-                        rank_change = card.rank - validated_run[-1].rank
-
-                    # print(f"{rank_change: >6}")
-
-                    if rank_change > 1:
-                        if len(available_jokers) >= rank_change - 1:
-                            for _ in range(rank_change - 1):
-                                validated_run.append(available_jokers.pop())
-                        else:
-                            validated_run = None
-                            break
-                    elif not (rank_change == 1 or rank_change == -NUM_RANKS + 1):
-                        validated_run = None
-                        break
-
-                validated_run.append(card)
-
-            if validated_run and available_jokers:
-                if not validated_run[-1].is_ace:
-                    validated_run = [*validated_run, *available_jokers]
-                elif not validated_run[0].is_ace:
-                    validated_run = [*available_jokers, *validated_run]
-
-            if validated_run:
-                validated_runs.append(validated_run)
-
-        print(validated_runs)
-
-        if not validated_runs:
+        if not runs:
             raise InvalidMeld("no valid run possible")
 
-        return 0
+        return runs
 
 
 test_sets = [
@@ -261,20 +265,20 @@ test_sets = [
 
 for notation in test_sets:
     meld = Card.from_test_notation(notation)
-    print(f"Set\t{meld}")
+    print(f"\nSet\t{meld}")
 
     try:
-        print(f"Score {Game.validate_set(meld)}")
+        sprint(f"Score {Game.validate_set(meld)}")
     except InvalidMeld as e:
-        print(f"Error {e}")
+        eprint(f"Error {e}")
 
 
 test_runs = [
     "♣2, ♦2",
-    "♣2, ♦2",
     "♣A, ♦2, ♥3",
     "♣A, ♣2, ♣3",
     "♣A, ♣2, ♣3, ♣3",
+    "♣3, ♣4, ♣5, ♣6",
     "♣A, ♣2, ♣3, ♣4, ♣5",
     "♣A, ♣2, ♣3, J., ♣5",
     "♣A, ♣2, ♣3, J., ♣4",
@@ -285,18 +289,20 @@ test_runs = [
     "♣A, ♣2, ♣3, ♣4, ♣5, ♣6, ♣7, ♣8, ♣9, ♣10, ♣J, ♣K, ♣Q, J.",
     "♥A, ♣2, ♣3, ♣4, ♣5, ♣6, ♣7, ♣8, ♣9, ♣10, ♣J, ♣K, J.",
     "♥10, J., J., ♥Q",
+    "♥10, J., J., J., ♥Q",
     "♥10, J., J., ♥K",
+    "♣J, ♣Q, ♣K, J., J., J.",
 ]
 
 
 for notation in test_runs:
     meld = Card.from_test_notation(notation)
-    print(f"Run\t{meld}")
+    print(f"\nRun\t{meld}")
 
     try:
-        print(f"Score {Game.validate_run(meld)}")
+        sprint(f"Runs {Game.discover_runs(meld)}")
     except InvalidMeld as e:
-        print(f"Error {e}")
+        eprint(f"Error {e}")
 
 
 game = Game(4)
