@@ -323,7 +323,7 @@ hand.sort(key=lambda c: c.index)
 
 def print_hand(cards):
     for i, card in enumerate(cards):
-    print(f"{i: >2} {card}")
+        print(f"{i: >2} {card}")
 
 
 print_hand(hand)
@@ -340,22 +340,22 @@ while query := input():
         indices = [int(i) for i in params]
         meld = [hand[i] for i in indices]
 
-    try:
+        try:
             score = Game.validate_set(meld)
 
             print(f"Set {meld}")
 
             hand = [card for i, card in enumerate(hand) if i not in indices]
-    except InvalidMeld as e:
+        except InvalidMeld as e:
             eprint(f"Not a set")
 
-    try:
+        try:
             runs = Game.discover_runs(meld)
 
             print(f"Runs {runs}")
 
             hand = [card for i, card in enumerate(hand) if i not in indices]
-    except InvalidMeld as e:
+        except InvalidMeld as e:
             eprint(f"Not a run")
 
         print_hand(hand)
