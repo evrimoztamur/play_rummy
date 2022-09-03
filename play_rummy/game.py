@@ -366,6 +366,7 @@ while query := input():
         break
 
     query = [x.strip() for x in query.split(" ")]
+    query = [x for x in query if len(x)]
     command = query[0].lower()
     params = query[1:]
 
