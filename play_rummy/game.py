@@ -313,7 +313,7 @@ for notation in test_sets:
     print(f"\nSet\t{meld}")
 
     try:
-        sprint(f"Score {Game.validate_set(meld)}")
+        sprint(f"{Game.validate_set(meld)}")
     except InvalidMeld as e:
         eprint(f"Error {e}")
 
@@ -332,7 +332,9 @@ test_runs = [
     "♣A, ♣10, ♣J, J., ♣Q",
     "♣A, ♣2, J., ♣4, ♣5, J., ♣7, J., J.",
     "♣A, ♣2, ♣3, ♣4, ♣5, ♣6, ♣7, ♣8, ♣9, ♣10, ♣J, ♣K, ♣Q, J.",
-    "♥A, ♣2, ♣3, ♣4, ♣5, ♣6, ♣7, ♣8, ♣9, ♣10, ♣J, ♣K, J.",
+    "♣A, ♣2, ♣3, ♣4, ♣5, ♣6, ♣7, ♣8, ♣9, ♣10, ♣J, ♣K, J.",
+    "♣A, ♣2, ♣3, ♣4, ♣5, ♣6, ♣7, ♣8, ♣9, ♣10, ♣J, ♣Q, ♣K",
+    "J., ♣A, ♣2, ♣3, ♣4, ♣5, ♣6, ♣7, ♣8, ♣9, ♣10, ♣J, ♣Q",
     "♥10, J., J., ♥Q",
     "♥10, J., J., J., ♥Q",
     "♥10, J., J., ♥K",
@@ -345,7 +347,7 @@ for notation in test_runs:
     print(f"\nRun\t{meld}")
 
     try:
-        sprint(f"Runs {Game.discover_runs(meld)}")
+        sprint(f"{Game.discover_runs(meld)}")
     except InvalidMeld as e:
         eprint(f"Error {e}")
 

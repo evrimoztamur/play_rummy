@@ -1,6 +1,5 @@
 TODO
 
-Refactor melds into classs
 Implement multiplayer gameplay with macro game rules
     Turn order
     Discard piles
@@ -10,6 +9,7 @@ Implement multiplayer gameplay with macro game rules
     Game end scoring
 
 3 Sep 2022
+Refactor meld data into classes
 Score runs
 
 1 Sep 2022
