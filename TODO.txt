@@ -1,0 +1,29 @@
+TODO
+
+Refactor melds into classs
+Implement multiplayer gameplay with macro game rules
+    Turn order
+    Discard piles
+    Meld control (40 points for first meld)
+    Layoffs (discard to table meld)
+    Joker swapping
+    Game end scoring
+
+3 Sep 2022
+Score runs
+
+1 Sep 2022
+
+Refactor meld checks and basic card stack functions
+Include additional tests
+Fix joker placement logic in run detection
+Correct certain checks in meld validation
+Include basic CLI gameplay (single player)
+
+31 Aug 2022
+
+Prepare card deck and basic wrapper class
+Draw random cards
+Validate and score sets
+Validate runs
+Prepare rudimentary tests

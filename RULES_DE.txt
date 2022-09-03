@@ -1,0 +1,56 @@
+1. Allgemeines
+
+1.1 Das Rommé-Spiel ist ein Kartenspiel für drei oder mehrere Personen.
+1.2 Die Anzahl der Spieler am Tisch beträgt vier Spieler wobei der Kartengeber nicht mitspielt.
+1.3 Zum Ausgleich der Teilnehmerliste kann auch an Tischen mit drei Spielern gespielt werden. Hier spielt der Kartengeber mit.
+
+2. Die Rommé-Karte
+
+2.1 Die Rommé-Karte besteht aus zwei Kartenspielen zu je 52 Blatt und je drei Jokern. Die Farben in ihrer Reihenfolge sind Kreuz, Pik, Herz und Karo
+2.2 Jede Farbe hat folgende Karten mit nachstehendem Zählwert:
+    1. Joker zählt 20 Augen
+    2. Ass zählt 11 Augen
+    3. König, Dame, Bube zählen 10 Augen
+    4. Alle anderen Karten zählen deren Nennwert
+
+3. Vor Spielbeginn
+
+3.1 Die Reihenfolge der Mitspieler wird ausgelost oder gesetzt. Der Spieler an Platz eins wählt an seinem, ihm zugelosten-/ gesetzten Tisch, seinen Platz. Die anderen Spieler schließen sich im Uhrzeigersinn an.
+3.2 Vor dem ersten Geben sind die Spielkarten auf Vollständigkeit zu überprüfen.
+
+4. Das Geben der Karten
+
+4.1 Mit dem Geben der Karten beginnt der Spieler auf Platz 1, er gibt an. Es wird im Uhrzeigersinn gegeben. Der rechte Nachbar von Platz 1 muss stets das letzte Spiel geben, er gibt ab.
+4.2 Der Kartengeber hat die Karten gründlich zu mischen, sie vom rechten Nachbarn einmal abheben zu lassen, den dabei liegen gebliebenen Teil auf den abgehobenen Teil zu legen und danach die Karten von oben zu verteilen.
+4.3 Werden die Karten vom Kartengeber beim Mischen gestochen oder geblättert, so sind sie vor dem Geben noch einmal gründlich durchzumischen.
+4.4 Das Abheben ist Pflicht! Es hat so zu erfolgen, dass mindestens vier Karten Abgehoben werden und mindestens vier Karten liegen bleiben.
+4.5 Ist der abhebende Mitspieler vorrübergehend abwesend, darf der rechts neben ihm sitzende Mitspieler abheben – vorausgesetzt, der eigentliche Abhebende hat sich dieses nicht ausdrücklich vorbehalten. Bei längerer Abwesenheit eines Mitspielers entscheidet ein Schiedsrichter über die Fortsetzung der Partie. Seite 2 von 4
+4.6 Der Geber verteilt, beim linken Mitspieler beginnend, an jeden Mitspieler einzeln und rundenweise 13 Spielkarten. Der Rest der Karten wird als Stapel, mit der Rückseite nach oben, auf den Spieltisch gelegt. Die oberste Karte des Reststapels soll erst nachdem alle Mitspieler den Empfang ihrer 13 Spielkarten bestätigt haben umgedreht werden. Wird anschließend während des Spiels dennoch eine falsche Kartenzahl bei einem Mitspieler festgestellt, so ist diese durch Nichtziehen oder Nachziehen zu korrigieren. In dieser Runde darf dieser Spieler nicht auslegen.
+4.7 Wird beim Kartengeben durch den Kartengeber allein oder mit verschuldet eine oder mehrere Karten aufgeworfen, muss neu gegeben werden.
+4.8 Wurden die Karten vergeben, indem sie zahlenmäßig ungleich verteilt sind und die Beanstandung vor Spielaufnahme erfolgte, oder mehrere Spieler eine fehlerhafte Kartenanzahl haben, ist nochmals neu zu geben.
+4.9 Einsprüche gegen jegliche Art der Unkorrektheit beim Mischen, Abheben sowie der Art und Weise der Kartenverteilung, müssen vor der Kartenaufnahme erfolgen.
+4.10 Hat ein Mitspieler gegeben, der nicht an der Reihe war, ist selbst ein beendetes Spiel, „auch das letzte einer Runde“, ungültig. Eine Runde gilt dann als abgeschlossen, wenn deren letztes Spiel ordnungsgemäß eingetragen oder dessen fehlerhafte bzw. fehlende Eintragung erst nach Beginn der nächsten Runde beanstandet wurde. Bei einer fehlerhaften Eintragung des letzten Spiels einer Serie ist die letzte Runde abgeschlossen, wenn die Spielliste unterschrieben ist.
+4.11 Bei einer falschen Geberfolge innerhalb der laufenden Runde sind alle Spiele ab der falschen Geberfolge an zu wiederholen.
+4.12 Ist eine falsche Geberfolge bereits in vorangegangenen Runden eingetreten oder ist ihr Ursprung nicht mehr festzustellen, bleiben alle abgeschlossenen Runden gültig. Die laufende Runde ist neu zu spielen, angefangen mit dem Geben durch den Mitspieler auf Platz eins.
+
+5. Die Spieldurchführung
+
+5.1 Grundsätzlich beginnt jeder Spielzug eines Spielers mit dem Ziehen einer Karte vom offenen oder verdeckten Stapel. Dann kann der Spieler entscheiden, ob er auslegen möchte oder ob er eine Karte auf den offenen Stapel ablegt. Mit dem Ablegen einer Karte auf den offenen Stapel beendet der Spieler seinen Spielzug. (Ausnahme: der Superrommé)
+5.2 Der an der Reihe befindliche Spieler darf seine Sätze oder Sequenzen / Folgen offen vor sich auslegen, wenn diese zusammen mindestens 40 Augen zählen. Danach kann er sofort bei den Mitspielern anlegen oder Joker tauschen. (siehe auch 5.7)
+5.3 Ausgelegte Sätze oder Sequenzen dürfen nicht mehr verändert werden. Was liegt das liegt.
+5.4 Erreicht ein Spieler beim Auslegen die 40 Augen nicht, sind die abgelegten Karten wieder aufzunehmen. Er muss dann eine beliebige Karte (außer Joker) auf den offenen Stapel ablegen und damit seinen Spielzug beenden. Der Spielzug ist in diesem Turnus für ihn beendet, auch wenn er durch Änderung die erforderlichen Augen erreichen könnte (siehe 5.3). Er kann erst im nächsten Turnus erneut auslegen.
+5.5 Zu einem Satz oder einer Sequenz gehören mindestens drei Karten, es können auch mehr angelegt werden. Zu einem Satz gehören z.B.: Asse, Könige, Damen usw. Zu einer Sequenz gehören die Karten in einer Farbe in Folge, z.B.: Ass, König, Dame etc.
+5.6 Ein Ass kann in der Folge sowohl vor dem König, als auch vor einer Zwei angelegt werden. Der Zählwert des Asses ist abhängig davon ob der König (oder alternativ ein Joker) mit in die Folge eingesetzt wird. Ist das der Fall, zählt das Ass 11 Augen. Legt ein Spieler die Folge Ass, Zwei, Drei (beliebig erweiterbar)ab, so zählt das Ass 1 Auge. Joker können nach Wahl des Besitzers jede Karte ersetzen und haben den Zählwert der ersetzten Karte. Joker dürfen nicht nebeneinander liegen und dürfen nicht in der Überzahl sein.
+5.7 Jeder Spieler, der bereits ausgelegt hat, darf weitere Sätze oder Sequenzen auslegen, auch wenn diese weniger als 40 Augen zählen. Auch kann er passende Karten bei seinen Mitspielern anlegen und Joker tauschen. Ein eingetauschter Joker ist in der Spielrunde sofort wieder aus- oder anzulegen.
+5.8 Joker können in einem Satz erst erworben werden, wenn der Satz mit 4 Karten voll ist.
+5.9 Nimmt ein Spieler eine Karte vom offenen, sichtbaren Stapel und legt sie sofort wieder ab, ist der nächste Spieler dran. Die Karte gilt als gezogen, wenn sie in der Hand sichtbar vom Stapel abgehoben wurde. Ein Kartenanspruch aus dem verdeckten Stapel ist für ihn in diesem Turnus ausgeschlossen.
+5.10 Nimmt ein Spieler, der nicht an der Reihe war, eine Karte vom offenen oder verdeckten Stapel auf, so ist diese Karte wieder an die gleiche Stelle zurück zu legen.
+5.11 Hat ein Spieler nur noch eine Karte auf der Hand, darf er keine Karte vom offenen Stapel ziehen, die ihm die Möglichkeit gibt, das Spiel zu beenden.
+5.12 Joker dürfen nur zur Beendigung des Spiels auf den offenen Stapel abgelegt werden.
+5.13 Die Karten sind sichtbar über der Tischkante zu halten. Auf Verlangen des Mitspielers ist die Kartenzahl in der Hand anzugeben.
+
+6. Spielende
+
+6.1 Sieger ist, wer als Erster alle seine Karten aus- und / oder angelegt hat und seine letzte Karte auf den offenen Stapel abgelegt hat (Ausnahme: der Superrommé).
+6.2 Hat ein Spieler durch Ablegen der letzten Karte Rommé erspielt, sind alle Augen der übrigen Mitspieler wie unter 2.2 beziffert, offen vom links sitzenden Spieler mit zu zählen und in die Liste bei den Augensummen einzutragen. Danach werden die Wertungspunkte ermittelt.
+6.3 Sind die Restkarten des verdeckten Stapels verbraucht und kein Spieler konnte Rommé erspielen, ist das Spiel beendet. Die in der Hand befindlichen Augen werden nun offen gezählt und in die Liste eingetragen (siehe 6.2).
