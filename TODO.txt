@@ -12,6 +12,7 @@ Implement multiplayer gameplay with macro game rules
 Refactor meld data into classes
 Include ace reordering tests
 Score runs
+Add flake8 as linter
 
 1 Sep 2022
 

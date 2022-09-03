@@ -187,7 +187,7 @@ class Game:
         random.shuffle(self.cards)
 
     def draw_card(self) -> Card:
-        return Card.identify_card(self.cards.pop())
+        return Card(self.cards.pop())
 
     def draw_many(self, num_cards):
         return [self.draw_card() for _ in range(num_cards)]
@@ -211,9 +211,8 @@ class Game:
         return SetData(cards)
 
     @staticmethod
-    def validate_run(cards, num_jokers):
+    def validate_run(cards, jokers):
         suit = cards[0].suit
-        available_jokers = num_jokers
         run = [cards.pop(0)]
 
         for card in cards:
@@ -223,9 +222,9 @@ class Game:
                 rank_change = card.rank - run[-1].rank
 
             if rank_change > 1:
-                if available_jokers >= rank_change - 1:
-                    run.extend([Card.joker()] * (rank_change - 1))
-                    available_jokers -= rank_change - 1
+                if len(jokers) >= rank_change - 1:
+                    run.extend(jokers[:rank_change])
+                    jokers = jokers[rank_change:]
                 else:
                     return None
             elif not (rank_change == 1 or rank_change == -NUM_RANKS + 1):
@@ -239,23 +238,18 @@ class Game:
         if run[0].is_ace:
             min_rank = -1
 
-        left_pad = min_rank + 1
-        right_pad = NUM_RANKS - max_rank - 1
-
-        right_waterfall = min(available_jokers, right_pad)
-        available_jokers -= right_waterfall
-        left_waterfall = min(available_jokers, left_pad)
+        right_waterfall = jokers[: min(len(jokers), NUM_RANKS - max_rank - 1)]
+        jokers = jokers[len(right_waterfall) :]
+        left_waterfall = jokers[: min(len(jokers), min_rank + 1)]
 
         equivalent_run = [
-            Card(suit, i)
-            for i in range(min_rank - left_waterfall, max_rank + right_waterfall + 1)
+            Card.from_suit_rank(suit, rank)
+            for rank in range(
+                min_rank - len(left_waterfall), max_rank + len(right_waterfall) + 1
+            )
         ]
 
-        run = [
-            *([Card.joker()] * left_waterfall),
-            *run,
-            *([Card.joker()] * right_waterfall),
-        ]
+        run = [*left_waterfall, *run, *right_waterfall]
 
         return RunData(run, equivalent_run)
 
@@ -286,7 +280,7 @@ class Game:
         else:
             runs = [[ace, *sorted_commons], [*sorted_commons, ace]]
 
-        runs = [Game.validate_run(run, len(jokers)) for run in runs]
+        runs = [Game.validate_run(run, jokers.copy()) for run in runs]
         runs = [run for run in runs if run]
 
         if not runs:
@@ -385,8 +379,8 @@ while query := input():
             print(f"Set {meld}")
 
             hand = [card for i, card in enumerate(hand) if i not in indices]
-        except InvalidMeld as e:
-            eprint(f"Not a set")
+        except InvalidMeld:
+            eprint("Not a set")
 
         try:
             runs = Game.discover_runs(meld)
@@ -394,8 +388,8 @@ while query := input():
             print(f"Runs {runs}")
 
             hand = [card for i, card in enumerate(hand) if i not in indices]
-        except InvalidMeld as e:
-            eprint(f"Not a run")
+        except InvalidMeld:
+            eprint("Not a run")
 
         print_hand(hand)
     elif command == "d":
