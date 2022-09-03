@@ -10,6 +10,7 @@ Implement multiplayer gameplay with macro game rules
 
 3 Sep 2022
 Refactor meld data into classes
+Include ace reordering tests
 Score runs
 
 1 Sep 2022
