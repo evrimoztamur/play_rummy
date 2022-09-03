@@ -24,6 +24,36 @@ NUM_CARDS_PER_DECK = NUM_SUITS * NUM_RANKS + NUM_JOKERS
 NUM_CARDS = NUM_DECKS * NUM_CARDS_PER_DECK
 
 
+class MeldData:
+    pass
+
+
+class SetData(MeldData):
+    def __init__(self, cards) -> None:
+        self.cards = cards
+        self.score = Card.regulars_of(cards)[0].score * len(cards)
+
+    def __str__(self) -> str:
+        return f"Set {self.score}* {self.cards}"
+
+    def __repr__(self) -> str:
+        return str(self)
+
+
+class RunData(MeldData):
+    def __init__(self, cards, equivalent_run) -> None:
+        self.cards = cards
+        self.equivalent_run = equivalent_run
+
+        self.score = sum([card.score for card in self.equivalent_run])
+        self.score += 10 if self.equivalent_run[-1].is_ace else 0
+
+    def __str__(self) -> str:
+        return f"Run {self.score}* {self.cards}"
+
+    def __repr__(self) -> str:
+        return str(self)
+
 class InvalidMeld(Exception):
     pass
 
@@ -177,7 +207,7 @@ class Game:
         if Card.are_ranks_matching(regulars):
             raise InvalidMeld("mismatching ranks")
 
-        return regulars[0].score * len(cards)
+        return SetData(cards)
 
     @staticmethod
     def validate_run(cards, num_jokers):
@@ -215,13 +245,10 @@ class Game:
         available_jokers -= right_waterfall
         left_waterfall = min(available_jokers, left_pad)
 
-        eq_run = [
+        equivalent_run = [
             Card(suit, i)
             for i in range(min_rank - left_waterfall, max_rank + right_waterfall + 1)
         ]
-
-        score = sum([card.score for card in eq_run])
-        score += 10 if eq_run[-1].is_ace else 0
 
         run = [
             *([Card.joker()] * left_waterfall),
@@ -229,7 +256,7 @@ class Game:
             *([Card.joker()] * right_waterfall),
         ]
 
-        return (run, eq_run, score)
+        return RunData(run, equivalent_run)
 
     @staticmethod
     def discover_runs(cards):
