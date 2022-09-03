@@ -13,6 +13,8 @@ Refactor meld data into classes
 Include ace reordering tests
 Score runs
 Add flake8 as linter
+Rework Card class to recognise IDs (only exception is tests from Card.reverse_notation(...) for 'fake' cards)
+Refactor run validation to respect joker IDs
 
 1 Sep 2022
 
