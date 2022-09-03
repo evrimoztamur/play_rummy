@@ -20,7 +20,7 @@ NUM_RANKS = len(CARD_RANKS)
 NUM_JOKERS = 3
 
 NUM_SUIT_CARDS = NUM_SUITS * NUM_RANKS
-NUM_CARDS_PER_DECK = NUM_SUITS * NUM_RANKS + NUM_JOKERS
+NUM_CARDS_PER_DECK = NUM_SUIT_CARDS + NUM_JOKERS
 NUM_CARDS = NUM_DECKS * NUM_CARDS_PER_DECK
 
 
@@ -54,36 +54,37 @@ class RunData(MeldData):
     def __repr__(self) -> str:
         return str(self)
 
+
 class InvalidMeld(Exception):
     pass
 
 
 class Card:
-    def __init__(self, suit, rank) -> None:
-        self.suit = suit
-        self.rank = rank
+    def __init__(self, card_id) -> None:
+        self.card_id = card_id
 
-    @staticmethod
-    def identify_card(card_index):
-        deck_index = card_index % NUM_CARDS_PER_DECK
+        deck_index = card_id % NUM_CARDS_PER_DECK
 
         if deck_index >= NUM_SUIT_CARDS:
-            return Card.joker()
+            self.suit = NUM_SUITS
+            self.rank = deck_index % NUM_RANKS - NUM_SUIT_CARDS
         else:
-            card_suit = deck_index // NUM_RANKS
-            card_rank = deck_index % NUM_RANKS
-            return Card(card_suit, card_rank)
+            self.suit = deck_index // NUM_RANKS
+            self.rank = deck_index % NUM_RANKS
 
     @staticmethod
-    def joker():
-        return Card(NUM_SUITS, 0)
+    def from_suit_rank(suit, rank):
+        rank = (rank + NUM_RANKS) % NUM_RANKS
+        return Card(suit * NUM_RANKS + rank)
 
     @staticmethod
     def reverse_notation(notation):
         if notation == "J.":
-            return Card(NUM_SUITS, 0)
+            return Card(NUM_SUIT_CARDS)
         else:
-            return Card(CARD_SUITS.index(notation[0]), CARD_RANKS.index(notation[1:]))
+            return Card.from_suit_rank(
+                CARD_SUITS.index(notation[0]), CARD_RANKS.index(notation[1:])
+            )
 
     @staticmethod
     def from_test_notation(test_notation):
