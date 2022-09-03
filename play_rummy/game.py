@@ -181,6 +181,7 @@ class Game:
 
     @staticmethod
     def validate_run(cards, num_jokers):
+        suit = cards[0].suit
         available_jokers = num_jokers
         run = [cards.pop(0)]
 
@@ -214,13 +215,21 @@ class Game:
         available_jokers -= right_waterfall
         left_waterfall = min(available_jokers, left_pad)
 
+        eq_run = [
+            Card(suit, i)
+            for i in range(min_rank - left_waterfall, max_rank + right_waterfall + 1)
+        ]
+
+        score = sum([card.score for card in eq_run])
+        score += 10 if eq_run[-1].is_ace else 0
+
         run = [
             *([Card.joker()] * left_waterfall),
             *run,
             *([Card.joker()] * right_waterfall),
         ]
 
-        return run
+        return (run, eq_run, score)
 
     @staticmethod
     def discover_runs(cards):
