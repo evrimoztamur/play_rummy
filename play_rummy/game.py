@@ -1,3 +1,4 @@
+from enum import Enum
 import random
 import sys
 
@@ -34,7 +35,7 @@ class SetData(MeldData):
         self.score = Card.regulars_of(cards)[0].score * len(cards)
 
     def __str__(self) -> str:
-        return f"Set {self.score}* {self.cards}"
+        return f"<Set ${self.score} {self.cards}>"
 
     def __repr__(self) -> str:
         return str(self)
@@ -49,13 +50,23 @@ class RunData(MeldData):
         self.score += 10 if self.equivalent_run[-1].is_ace else 0
 
     def __str__(self) -> str:
-        return f"Run {self.score}* {self.cards}"
+        return f"<Run ${self.score} {self.cards}>"
 
     def __repr__(self) -> str:
         return str(self)
 
 
+class TableMeld:
+    def __init__(self, player, meld_data: MeldData) -> None:
+        self.player = player
+        self.meld_data = meld_data
+
+
 class InvalidMeld(Exception):
+    pass
+
+
+class IllegalMove(Exception):
     pass
 
 
@@ -178,19 +189,155 @@ class Card:
         return NotImplemented
 
 
+class Move:
+    def __init__(self, player, action) -> None:
+        self.player = player
+        self.action = action
+
+    def __str__(self) -> str:
+        return f"<Meld {self.player} {self.action}>"
+
+    def __repr__(self) -> str:
+        return str(self)
+
+
+class ActionSort(Enum):
+    MELD = 1
+    PICK_UP = 2
+    DISCARD = 3
+
+
+class Action:
+    TARGET_DECK = 0
+    TARGET_DISCARD = 1
+
+    def __init__(self, sort, *args) -> None:
+        self.sort = sort
+        self.args = args
+
+    def __str__(self) -> str:
+        return f"<Action {self.sort.name} {self.args}>"
+
+    def __repr__(self) -> str:
+        return str(self)
+
+
 class Game:
     def __init__(self, num_players) -> None:
-        self.cards = list(range(NUM_CARDS))
-        self.players = list(range(num_players))
+        self.cards = [Card(card_id) for card_id in range(NUM_CARDS)]
+        self.hands = [[] for _ in range(num_players)]
+        self.melds = []
+        self.discard_pile = []
+        self.turns = []
+        self.mover = 0
 
     def shuffle_cards(self):
         random.shuffle(self.cards)
 
     def draw_card(self) -> Card:
-        return Card(self.cards.pop())
+        if len(self.cards) > 0:
+            return self.cards.pop()
+        else:
+            raise IllegalMove("no card available in deck")
 
     def draw_many(self, num_cards):
         return [self.draw_card() for _ in range(num_cards)]
+
+    def draw_discard(self) -> Card:
+        if len(self.discard_pile) > 0:
+            return self.discard_pile.pop()
+        else:
+            raise IllegalMove("no card available in discard pile")
+
+    def start_game(self):
+        self.shuffle_cards()
+
+        for hand in self.hands:
+            hand.extend(self.draw_many(13))
+            hand.sort(key=lambda c: c.index)
+
+            print_hand(hand)
+
+    @staticmethod
+    def turn_contains(turn: list[Move], sort):
+        return bool(next((move for move in turn if move.action.sort == sort), False))
+
+    def make_move(self, move):
+        last_move = (
+            self.turns[-1][-1] if self.turns and self.turns[-1] else Move(None, None)
+        )
+
+        if last_move.player != move.player:
+            self.turns.append([])
+
+        if self.mover != move.player:
+            raise IllegalMove("not your turn")
+
+        turn = self.turns[-1]
+
+        if move.action.sort == ActionSort.PICK_UP:
+            if Game.turn_contains(turn, ActionSort.PICK_UP):
+                raise IllegalMove("already picked up")
+
+            target = move.action.args[0]
+
+            if target == Action.TARGET_DECK:
+                card = game.draw_card()
+            elif target == Action.TARGET_DISCARD:
+                if len(self.turns) <= 1:
+                    raise IllegalMove("cannot pick up from discard pile on first turn")
+                card = game.draw_discard()
+            else:
+                raise IllegalMove("invalid pick up target")
+
+            print(f"Picked up {card}")
+            self.hands[move.player].append(card)
+        elif move.action.sort == ActionSort.MELD:
+            meld = [self.hands[move.player][i] for i in move.action.args[0]]
+
+            print(f"Attempting {meld}")
+
+            meld_data = None
+
+            try:
+                meld_data = Game.validate_set(meld)
+            except InvalidMeld as e:
+                pass
+
+            try:
+                meld_data = Game.discover_runs(meld)
+            except InvalidMeld as e:
+                pass
+
+            if meld_data:
+                sprint(f"{meld_data}")
+
+                self.hands[move.player] = [
+                    card
+                    for i, card in enumerate(self.hands[move.player])
+                    if i not in move.action.args[0]
+                ]
+
+                self.melds.append(TableMeld(move.player, meld_data))
+
+                print_hand(self.hands[move.player])
+            else:
+                raise IllegalMove("no valid meld for selected cards")
+        elif move.action.sort == ActionSort.DISCARD:
+            if not Game.turn_contains(turn, ActionSort.PICK_UP):
+                raise IllegalMove("did not pick up a card")
+
+            discarded_card = self.hands[move.player].pop(move.action.args[0])
+
+            self.discard_pile.append(discarded_card)
+
+            print(f"Discarded {discarded_card}")
+
+            self.mover += 1
+
+        turn.append(move)
+
+        return move
 
     @staticmethod
     def validate_set(cards):
@@ -347,62 +494,31 @@ for notation in test_runs:
         eprint(f"Error {e}")
 
 
-game = Game(4)
-game.shuffle_cards()
-
-hand = game.draw_many(13)
-hand.sort(key=lambda c: c.index)
-
-
 def print_hand(cards):
     for i, card in enumerate(cards):
         print(f"{i: >2} {card}")
 
 
-print_hand(hand)
+random.seed(1)
 
-while query := input():
-    if not query or query == "q":
-        break
+game = Game(4)
+game.start_game()
 
-    query = [x.strip() for x in query.split(" ")]
-    query = [x for x in query if len(x)]
-    command = query[0].lower()
-    params = query[1:]
+test_moves = [
+    Move(0, Action(ActionSort.DISCARD, 0)),
+    Move(0, Action(ActionSort.PICK_UP, 1)),
+    Move(0, Action(ActionSort.PICK_UP, 0)),
+    Move(0, Action(ActionSort.PICK_UP, 0)),
+    Move(0, Action(ActionSort.MELD, [0, 3, 7])),
+    Move(0, Action(ActionSort.MELD, [0, 4, 7])),
+    Move(0, Action(ActionSort.DISCARD, 3)),
+    Move(0, Action(ActionSort.PICK_UP, 1)),
+]
 
-    if command == "m":
-        indices = [int(i) for i in params]
-        meld = [hand[i] for i in indices]
+for move in test_moves:
+    try:
+        sprint(f"Move {move}")
 
-        try:
-            score = Game.validate_set(meld)
-
-            print(f"Set {meld}")
-
-            hand = [card for i, card in enumerate(hand) if i not in indices]
-        except InvalidMeld:
-            eprint("Not a set")
-
-        try:
-            runs = Game.discover_runs(meld)
-
-            print(f"Runs {runs}")
-
-            hand = [card for i, card in enumerate(hand) if i not in indices]
-        except InvalidMeld:
-            eprint("Not a run")
-
-        print_hand(hand)
-    elif command == "d":
-        discard_card = hand.pop(int(params[0]))
-
-        print(f"Discarded {discard_card}")
-
-        draw_card = game.draw_card()
-
-        hand.append(draw_card)
-        hand.sort(key=lambda c: c.index)
-
-        print(f"Drew {draw_card}\n")
-
-        print_hand(hand)
+        game.make_move(move)
+    except IllegalMove as e:
+        eprint(f"Error {e}")
