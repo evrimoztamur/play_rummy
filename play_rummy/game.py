@@ -11,7 +11,7 @@ def sprint(message):
     print(f"\x1b[1;32m{message}\x1b[0m", file=sys.stderr)
 
 
-CARD_SUITS = ["♣", "♦", "♥", "♠"]
+CARD_SUITS = ["♦", "♥", "♣", "♠"]
 CARD_RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
 
 NUM_DECKS = 2
@@ -117,12 +117,11 @@ class Card:
     def is_court(self):
         return self.rank == 9 or self.rank == 10 or self.rank == 11
 
-    @property
-    def name(self):
+    def name(self, *, pad=1):
         if self.is_joker:
-            return "J."
+            return " J ".ljust(pad).rjust(pad)
         else:
-            return f"{CARD_SUITS[self.suit]}{CARD_RANKS[self.rank]}"
+            return f"{CARD_SUITS[self.suit]}{CARD_RANKS[self.rank]: >{pad}}"
 
     @property
     def score(self):
@@ -172,10 +171,18 @@ class Card:
         return len(set(cards)) != len(cards)
 
     def __str__(self) -> str:
-        return self.name
+        return self.name()
 
     def __repr__(self) -> str:
         return str(self)
+
+    def pretty(self) -> str:
+        if self.suit == 0 or self.suit == 1:
+            return f"\x1b[107m\x1b[38;5;196m {self.name(pad=2)} \x1b[0m"
+        elif not self.is_joker:
+            return f"\x1b[107m\x1b[38;5;16m {self.name(pad=2)} \x1b[0m"
+        else:
+            return f"\x1b[45m {self.name(pad=2)} \x1b[0m"
 
     def __hash__(self):
         return hash((self.suit, self.rank))
@@ -195,7 +202,7 @@ class Move:
         self.action = action
 
     def __str__(self) -> str:
-        return f"<Meld {self.player} {self.action}>"
+        return f"<Move {self.player} {self.action}>"
 
     def __repr__(self) -> str:
         return str(self)
@@ -264,7 +271,6 @@ class Game:
 
     def make_move(self, move):
         if len(self.turns) % len(self.hands) == move.player:
-            print_hand(self.hands[move.player])
             self.turns.append([])
 
         if self.mover != move.player:
@@ -298,12 +304,12 @@ class Game:
 
             try:
                 meld_data = Game.validate_set(meld)
-            except InvalidMeld as e:
+            except InvalidMeld:
                 pass
 
             try:
                 meld_data = Game.discover_runs(meld)
-            except InvalidMeld as e:
+            except InvalidMeld:
                 pass
 
             if meld_data:
@@ -316,8 +322,6 @@ class Game:
                 ]
 
                 self.melds.append(TableMeld(move.player, meld_data))
-
-                print_hand(self.hands[move.player])
             else:
                 raise IllegalMove("no valid meld for selected cards")
         elif move.action.sort == ActionSort.DISCARD:
@@ -331,6 +335,7 @@ class Game:
             print(f"Discarded {discarded_card}")
 
             self.mover += 1
+            self.mover %= len(self.hands)
 
         turn.append(move)
 
@@ -494,9 +499,9 @@ for notation in test_runs:
 def print_hand(cards):
     for i, card in enumerate(cards):
         if (i + 1) % 4 == 0 or i == len(cards) - 1:
-            print(f"{i: >2} {card}")
+            print(f"{i: >2} {card.pretty()}")
         else:
-            print(f"{i: >2} {card}\t", end="")
+            print(f"{i: >2} {card.pretty()}  ", end="")
 
 
 random.seed(1)
@@ -515,15 +520,25 @@ test_moves = [
     Move(0, Action(ActionSort.PICK_UP, 1)),
     Move(1, Action(ActionSort.PICK_UP, 0)),
     Move(1, Action(ActionSort.PICK_UP, 0)),
+    Move(1, Action(ActionSort.MELD, [0, 5, 8])),
+    Move(1, Action(ActionSort.DISCARD, 0)),
+    Move(2, Action(ActionSort.PICK_UP, 1)),
+    Move(2, Action(ActionSort.MELD, [0, 2, 13])),
+    Move(2, Action(ActionSort.MELD, [0, 2, 4, 8])),
+    Move(2, Action(ActionSort.MELD, [0, 1, 4])),
+    Move(2, Action(ActionSort.MELD, [0, 1, 2])),
+    Move(2, Action(ActionSort.DISCARD, 0)),
 ]
 
 for move in test_moves:
     try:
         print(f"\n- Discard {game.discard_pile}")
-        print(f"- Turns {game.turns}")
+        # print(f"- Turns {game.turns}")
         print(f"- Deck {len(game.cards)}")
         sprint(f"Move {move}")
 
         game.make_move(move)
+
+        print_hand(game.hands[game.mover])
     except IllegalMove as e:
         eprint(f"Error {e}")
