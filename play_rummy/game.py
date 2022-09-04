@@ -263,11 +263,8 @@ class Game:
         return bool(next((move for move in turn if move.action.sort == sort), False))
 
     def make_move(self, move):
-        last_move = (
-            self.turns[-1][-1] if self.turns and self.turns[-1] else Move(None, None)
-        )
-
-        if last_move.player != move.player:
+        if len(self.turns) % len(self.hands) == move.player:
+            print_hand(self.hands[move.player])
             self.turns.append([])
 
         if self.mover != move.player:
@@ -496,7 +493,10 @@ for notation in test_runs:
 
 def print_hand(cards):
     for i, card in enumerate(cards):
-        print(f"{i: >2} {card}")
+        if (i + 1) % 4 == 0 or i == len(cards) - 1:
+            print(f"{i: >2} {card}")
+        else:
+            print(f"{i: >2} {card}\t", end="")
 
 
 random.seed(1)
@@ -513,10 +513,15 @@ test_moves = [
     Move(0, Action(ActionSort.MELD, [0, 4, 7])),
     Move(0, Action(ActionSort.DISCARD, 3)),
     Move(0, Action(ActionSort.PICK_UP, 1)),
+    Move(1, Action(ActionSort.PICK_UP, 0)),
+    Move(1, Action(ActionSort.PICK_UP, 0)),
 ]
 
 for move in test_moves:
     try:
+        print(f"\n- Discard {game.discard_pile}")
+        print(f"- Turns {game.turns}")
+        print(f"- Deck {len(game.cards)}")
         sprint(f"Move {move}")
 
         game.make_move(move)
