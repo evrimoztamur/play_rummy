@@ -5,11 +5,13 @@ Implement further game rules
     Joker swapping
 
 5 Sep 2022
+
 Implement meld control (40 points for first meld) and game end scoring
 Replace game test turns to account for meld control
 Remove Move abstraction as player turns are deterministic and should be handled separately
 
 4 Sep 2022
+
 Implement multiplayer gameplay with macro game rules
     Turn order
     Melding
