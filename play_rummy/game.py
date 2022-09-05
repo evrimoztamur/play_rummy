@@ -60,7 +60,7 @@ class InvalidMeld(Exception):
     pass
 
 
-class IllegalMove(Exception):
+class Illegalaction(Exception):
     pass
 
 
@@ -190,18 +190,6 @@ class Card:
         return NotImplemented
 
 
-class Move:
-    def __init__(self, player, action) -> None:
-        self.player = player
-        self.action = action
-
-    def __str__(self) -> str:
-        return f"<Move {self.player} {self.action}>"
-
-    def __repr__(self) -> str:
-        return str(self)
-
-
 class ActionSort(Enum):
     MELD = 1
     PICK_UP = 2
@@ -231,8 +219,11 @@ class Game:
         self.hands = [[] for _ in range(num_players)]
         self.melds = [[] for _ in range(num_players)]
         self.discard_pile = []
-        self.turns = []
-        self.mover = 0
+        self.turns = [[]]
+
+    @property
+    def mover(self):
+        return (len(self.turns) - 1) % len(self.hands)
 
     def shuffle_cards(self):
         random.shuffle(self.cards)
@@ -241,7 +232,7 @@ class Game:
         if len(self.cards) > 0:
             return self.cards.pop()
         else:
-            raise IllegalMove("no card available in deck")
+            raise Illegalaction("no card available in deck")
 
     def draw_many(self, num_cards):
         return [self.draw_card() for _ in range(num_cards)]
@@ -250,7 +241,7 @@ class Game:
         if len(self.discard_pile) > 0:
             return self.discard_pile.pop()
         else:
-            raise IllegalMove("no card available in discard pile")
+            raise Illegalaction("no card available in discard pile")
 
     def start_game(self):
         self.shuffle_cards()
@@ -262,37 +253,33 @@ class Game:
             print_hand(hand)
 
     @staticmethod
-    def turn_contains(turn: list[Move], sort):
-        return bool(next((move for move in turn if move.action.sort == sort), False))
+    def turn_contains(turn: list[Action], sort):
+        return bool(next((action for action in turn if action.sort == sort), False))
 
-    def make_move(self, move):
-        if len(self.turns) % len(self.hands) == move.player:
-            self.turns.append([])
-
-        if self.mover != move.player:
-            raise IllegalMove("not your turn")
-
+    def make_action(self, action: Action):
         turn = self.turns[-1]
 
-        if move.action.sort == ActionSort.PICK_UP:
+        if action.sort == ActionSort.PICK_UP:
             if Game.turn_contains(turn, ActionSort.PICK_UP):
-                raise IllegalMove("already picked up")
+                raise Illegalaction("already picked up")
 
-            target = move.action.args[0]
+            target = action.args[0]
 
             if target == Action.TARGET_DECK:
                 card = game.draw_card()
             elif target == Action.TARGET_DISCARD:
                 if len(self.turns) <= 1:
-                    raise IllegalMove("cannot pick up from discard pile on first turn")
+                    raise Illegalaction(
+                        "cannot pick up from discard pile on first turn"
+                    )
                 card = game.draw_discard()
             else:
-                raise IllegalMove("invalid pick up target")
+                raise Illegalaction("invalid pick up target")
 
             print(f"Picked up {card}")
-            self.hands[move.player].append(card)
-        elif move.action.sort == ActionSort.MELD:
-            meld = [self.hands[move.player][i] for i in move.action.args[0]]
+            self.hands[self.mover].append(card)
+        elif action.sort == ActionSort.MELD:
+            meld = [self.hands[self.mover][i] for i in action.args[0]]
 
             print(f"Attempting {meld}")
 
@@ -317,38 +304,37 @@ class Game:
                 sprint(f"{meld_data}")
 
                 if (
-                    not self.melds[move.player]
+                    not self.melds[self.mover]
                     and meld_data.score < Game.FIRST_MELD_THRESHOLD
                 ):
-                    raise IllegalMove(
+                    raise Illegalaction(
                         f"first meld score not high enough (${meld_data.score} < ${Game.FIRST_MELD_THRESHOLD}"
                     )
 
-                self.hands[move.player] = [
+                self.hands[self.mover] = [
                     card
-                    for i, card in enumerate(self.hands[move.player])
-                    if i not in move.action.args[0]
+                    for i, card in enumerate(self.hands[self.mover])
+                    if i not in action.args[0]
                 ]
 
-                self.melds[move.player].append(meld_data)
+                self.melds[self.mover].append(meld_data)
             else:
-                raise IllegalMove("no valid meld for selected cards")
-        elif move.action.sort == ActionSort.DISCARD:
+                raise Illegalaction("no valid meld for selected cards")
+        elif action.sort == ActionSort.DISCARD:
             if not Game.turn_contains(turn, ActionSort.PICK_UP):
-                raise IllegalMove("did not pick up a card")
+                raise Illegalaction("did not pick up a card")
 
-            discarded_card = self.hands[move.player].pop(move.action.args[0])
+            discarded_card = self.hands[self.mover].pop(action.args[0])
 
             self.discard_pile.append(discarded_card)
 
             print(f"Discarded {discarded_card}\n\n")
 
-            self.mover += 1
-            self.mover %= len(self.hands)
+            self.turns.append([])
 
-        turn.append(move)
+        turn.append(action)
 
-        if not self.hands[move.player]:
+        if not self.hands[self.mover]:
             print("Game over")
 
             for player, hand in enumerate(self.hands):
@@ -549,77 +535,77 @@ random.seed(1)
 game = Game(4)
 game.start_game()
 
-test_moves = [
-    Move(0, Action(ActionSort.DISCARD, 0)),
-    Move(0, Action(ActionSort.PICK_UP, 1)),
-    Move(0, Action(ActionSort.PICK_UP, 0)),
-    Move(0, Action(ActionSort.PICK_UP, 0)),
-    Move(0, Action(ActionSort.MELD, [0, 3, 7])),
-    Move(0, Action(ActionSort.MELD, [0, 4, 7])),
-    Move(0, Action(ActionSort.DISCARD, 9)),
-    Move(0, Action(ActionSort.PICK_UP, 1)),
-    Move(1, Action(ActionSort.PICK_UP, 1)),
-    Move(1, Action(ActionSort.PICK_UP, 0)),
-    Move(1, Action(ActionSort.MELD, [0, 5, 8])),
-    Move(1, Action(ActionSort.DISCARD, 11)),
-    Move(2, Action(ActionSort.PICK_UP, 0)),
-    Move(2, Action(ActionSort.MELD, [3, 5, 9, 11])),
-    Move(2, Action(ActionSort.MELD, [0, 3, 4, 7])),
-    Move(2, Action(ActionSort.DISCARD, 5)),
-    Move(3, Action(ActionSort.PICK_UP, 1)),
-    Move(3, Action(ActionSort.MELD, [5, 6, 7, 8])),
-    Move(3, Action(ActionSort.MELD, [4, 5, 8])),
-    Move(3, Action(ActionSort.DISCARD, 4)),
-    Move(0, Action(ActionSort.PICK_UP, 0)),
-    Move(0, Action(ActionSort.DISCARD, 2)),
-    Move(1, Action(ActionSort.PICK_UP, 1)),
-    Move(1, Action(ActionSort.DISCARD, 11)),
-    Move(2, Action(ActionSort.PICK_UP, 0)),
-    Move(2, Action(ActionSort.DISCARD, 5)),
-    Move(3, Action(ActionSort.PICK_UP, 0)),
-    Move(3, Action(ActionSort.DISCARD, 3)),
-    Move(0, Action(ActionSort.PICK_UP, 0)),
-    Move(0, Action(ActionSort.DISCARD, 12)),
-    Move(1, Action(ActionSort.PICK_UP, 0)),
-    Move(1, Action(ActionSort.DISCARD, 0)),
-    Move(2, Action(ActionSort.PICK_UP, 1)),
-    Move(2, Action(ActionSort.MELD, [0, 1, 5])),
-    Move(2, Action(ActionSort.DISCARD, 2)),
-    Move(3, Action(ActionSort.PICK_UP, 0)),
-    Move(3, Action(ActionSort.DISCARD, 3)),
-    Move(0, Action(ActionSort.PICK_UP, 0)),
-    Move(0, Action(ActionSort.DISCARD, 4)),
-    Move(1, Action(ActionSort.PICK_UP, 0)),
-    Move(1, Action(ActionSort.DISCARD, 13)),
-    Move(2, Action(ActionSort.PICK_UP, 0)),
-    Move(2, Action(ActionSort.DISCARD, 2)),
-    Move(3, Action(ActionSort.PICK_UP, 0)),
-    Move(3, Action(ActionSort.DISCARD, 6)),
-    Move(0, Action(ActionSort.PICK_UP, 1)),
-    Move(0, Action(ActionSort.DISCARD, 12)),
-    Move(1, Action(ActionSort.PICK_UP, 0)),
-    Move(1, Action(ActionSort.DISCARD, 0)),
-    Move(2, Action(ActionSort.PICK_UP, 0)),
-    Move(2, Action(ActionSort.DISCARD, 2)),
-    Move(3, Action(ActionSort.PICK_UP, 0)),
-    Move(3, Action(ActionSort.DISCARD, 6)),
-    Move(0, Action(ActionSort.PICK_UP, 0)),
-    Move(0, Action(ActionSort.DISCARD, 9)),
-    Move(1, Action(ActionSort.PICK_UP, 0)),
-    Move(1, Action(ActionSort.DISCARD, 6)),
-    Move(2, Action(ActionSort.PICK_UP, 1)),
-    Move(2, Action(ActionSort.MELD, [0, 1, 2])),
+test_actions = [
+    Action(ActionSort.DISCARD, 0),
+    Action(ActionSort.PICK_UP, 1),
+    Action(ActionSort.PICK_UP, 0),
+    Action(ActionSort.PICK_UP, 0),
+    Action(ActionSort.MELD, [0, 3, 7]),
+    Action(ActionSort.MELD, [0, 4, 7]),
+    Action(ActionSort.DISCARD, 9),
+    Action(ActionSort.PICK_UP, 1),
+    Action(ActionSort.PICK_UP, 1),
+    Action(ActionSort.PICK_UP, 0),
+    Action(ActionSort.MELD, [0, 5, 8]),
+    Action(ActionSort.DISCARD, 11),
+    Action(ActionSort.PICK_UP, 0),
+    Action(ActionSort.MELD, [3, 5, 9, 11]),
+    Action(ActionSort.MELD, [0, 3, 4, 7]),
+    Action(ActionSort.DISCARD, 5),
+    Action(ActionSort.PICK_UP, 1),
+    Action(ActionSort.MELD, [5, 6, 7, 8]),
+    Action(ActionSort.MELD, [4, 5, 8]),
+    Action(ActionSort.DISCARD, 4),
+    Action(ActionSort.PICK_UP, 0),
+    Action(ActionSort.DISCARD, 2),
+    Action(ActionSort.PICK_UP, 1),
+    Action(ActionSort.DISCARD, 11),
+    Action(ActionSort.PICK_UP, 0),
+    Action(ActionSort.DISCARD, 5),
+    Action(ActionSort.PICK_UP, 0),
+    Action(ActionSort.DISCARD, 3),
+    Action(ActionSort.PICK_UP, 0),
+    Action(ActionSort.DISCARD, 12),
+    Action(ActionSort.PICK_UP, 0),
+    Action(ActionSort.DISCARD, 0),
+    Action(ActionSort.PICK_UP, 1),
+    Action(ActionSort.MELD, [0, 1, 5]),
+    Action(ActionSort.DISCARD, 2),
+    Action(ActionSort.PICK_UP, 0),
+    Action(ActionSort.DISCARD, 3),
+    Action(ActionSort.PICK_UP, 0),
+    Action(ActionSort.DISCARD, 4),
+    Action(ActionSort.PICK_UP, 0),
+    Action(ActionSort.DISCARD, 13),
+    Action(ActionSort.PICK_UP, 0),
+    Action(ActionSort.DISCARD, 2),
+    Action(ActionSort.PICK_UP, 0),
+    Action(ActionSort.DISCARD, 6),
+    Action(ActionSort.PICK_UP, 1),
+    Action(ActionSort.DISCARD, 12),
+    Action(ActionSort.PICK_UP, 0),
+    Action(ActionSort.DISCARD, 0),
+    Action(ActionSort.PICK_UP, 0),
+    Action(ActionSort.DISCARD, 2),
+    Action(ActionSort.PICK_UP, 0),
+    Action(ActionSort.DISCARD, 6),
+    Action(ActionSort.PICK_UP, 0),
+    Action(ActionSort.DISCARD, 9),
+    Action(ActionSort.PICK_UP, 0),
+    Action(ActionSort.DISCARD, 6),
+    Action(ActionSort.PICK_UP, 1),
+    Action(ActionSort.MELD, [0, 1, 2]),
 ]
 
-for move in test_moves:
+for action in test_actions:
     try:
         print(f"\n- Discard {game.discard_pile}")
         # print(f"- Turns {game.turns}")
         print(f"- Deck {len(game.cards)}")
-        sprint(f"Move {move}")
+        sprint(f"Action {action}")
 
-        game.make_move(move)
+        game.make_action(action)
 
         print_hand(game.hands[game.mover])
-    except IllegalMove as e:
+    except Illegalaction as e:
         eprint(f"Error {e}")
