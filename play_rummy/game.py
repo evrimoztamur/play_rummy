@@ -46,20 +46,14 @@ class RunData(MeldData):
         self.cards = cards
         self.equivalent_run = equivalent_run
 
-        self.score = sum([card.score for card in self.equivalent_run])
-        self.score += 10 if self.equivalent_run[-1].is_ace else 0
+        self.score = Game.score_cards(equivalent_run)
+        self.score += -10 if self.equivalent_run[0].is_ace else 0
 
     def __str__(self) -> str:
         return f"<Run ${self.score} {self.cards}>"
 
     def __repr__(self) -> str:
         return str(self)
-
-
-class TableMeld:
-    def __init__(self, player, meld_data: MeldData) -> None:
-        self.player = player
-        self.meld_data = meld_data
 
 
 class InvalidMeld(Exception):
@@ -126,9 +120,9 @@ class Card:
     @property
     def score(self):
         if self.is_joker:
-            return -1
+            return 20
         elif self.is_ace:
-            return 1
+            return 11
         elif self.is_court:
             return 10
         else:
@@ -230,10 +224,12 @@ class Action:
 
 
 class Game:
+    FIRST_MELD_THRESHOLD = 40
+
     def __init__(self, num_players) -> None:
         self.cards = [Card(card_id) for card_id in range(NUM_CARDS)]
         self.hands = [[] for _ in range(num_players)]
-        self.melds = []
+        self.melds = [[] for _ in range(num_players)]
         self.discard_pile = []
         self.turns = []
         self.mover = 0
@@ -308,12 +304,25 @@ class Game:
                 pass
 
             try:
-                meld_data = Game.discover_runs(meld)
+                runs = Game.discover_runs(meld)
+
+                if len(runs) > 1:
+                    meld_data = max(*runs, key=lambda meld: meld.score)
+                else:
+                    meld_data = runs[0]
             except InvalidMeld:
                 pass
 
             if meld_data:
                 sprint(f"{meld_data}")
+
+                if (
+                    not self.melds[move.player]
+                    and meld_data.score < Game.FIRST_MELD_THRESHOLD
+                ):
+                    raise IllegalMove(
+                        f"first meld score not high enough (${meld_data.score} < ${Game.FIRST_MELD_THRESHOLD}"
+                    )
 
                 self.hands[move.player] = [
                     card
@@ -321,7 +330,7 @@ class Game:
                     if i not in move.action.args[0]
                 ]
 
-                self.melds.append(TableMeld(move.player, meld_data))
+                self.melds[move.player].append(meld_data)
             else:
                 raise IllegalMove("no valid meld for selected cards")
         elif move.action.sort == ActionSort.DISCARD:
@@ -332,14 +341,44 @@ class Game:
 
             self.discard_pile.append(discarded_card)
 
-            print(f"Discarded {discarded_card}")
+            print(f"Discarded {discarded_card}\n\n")
 
             self.mover += 1
             self.mover %= len(self.hands)
 
         turn.append(move)
 
-        return move
+        if not self.hands[move.player]:
+            print("Game over")
+
+            for player, hand in enumerate(self.hands):
+                score = Game.score_cards(hand)
+                tournament_score = Game.tournament_score(
+                    score, len(self.melds[player]) > 0
+                )
+                print(f"{player}  {score: >4}  {tournament_score: >3}")
+
+    @staticmethod
+    def tournament_score(score, opened):
+        if score == 0:
+            return 5
+        else:
+            if opened:
+                if score <= 10:
+                    return 3
+                elif score <= 30:
+                    return 2
+                else:
+                    return 1
+            else:
+                if score <= 100:
+                    return 0
+                else:
+                    return -1
+
+    @staticmethod
+    def score_cards(cards):
+        return sum([card.score for card in cards])
 
     @staticmethod
     def validate_set(cards):
@@ -372,8 +411,8 @@ class Game:
 
             if rank_change > 1:
                 if len(jokers) >= rank_change - 1:
-                    run.extend(jokers[:rank_change])
-                    jokers = jokers[rank_change:]
+                    run.extend(jokers[: rank_change - 1])
+                    jokers = jokers[rank_change - 1 :]
                 else:
                     return None
             elif not (rank_change == 1 or rank_change == -NUM_RANKS + 1):
@@ -482,6 +521,7 @@ test_runs = [
     "♥10, J., J., ♥Q",
     "♥10, J., J., J., ♥Q",
     "♥10, J., J., ♥K",
+    "♥J, J., J., ♥K",
     "♣J, ♣Q, ♣K, J., J., J.",
 ]
 

@@ -1,10 +1,11 @@
 TODO
 
 Implement further game rules
-    Meld control (40 points for first meld)
     Layoffs (discard to table meld)
     Joker swapping
-    Game end scoring
+
+5 Sep 2022
+Implement meld control (40 points for first meld) and game end scoring
 
 4 Sep 2022
 Implement multiplayer gameplay with macro game rules
