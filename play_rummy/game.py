@@ -178,6 +178,14 @@ class Card:
         else:
             return f"\x1b[45m {self.name(pad=2)} \x1b[0m"
 
+    @staticmethod
+    def print_cards(cards):
+        for i, card in enumerate(cards):
+            if (i + 1) % 4 == 0 or i == len(cards) - 1:
+                print(f"{i: >2} {card.pretty()}")
+            else:
+                print(f"{i: >2} {card.pretty()}  ", end="")
+
     def __hash__(self):
         return hash((self.suit, self.rank))
 
@@ -233,10 +241,8 @@ class PickUpAction(Action):
 
         game.hands[game.mover].append(card)
 
-        print(f"Picked up {card}")
-
     def __str__(self) -> str:
-        return f"<Action Pick-up {self.target}>"
+        return f"<Action Pick-up {self.target.name}>"
 
 
 class MeldAction(Action):
@@ -248,8 +254,6 @@ class MeldAction(Action):
 
     def validate(self, game):
         meld = [game.hands[game.mover][i] for i in self.card_indices]
-
-        print(f"Attempting {meld}")
 
         self.meld_data = None
 
@@ -282,8 +286,6 @@ class MeldAction(Action):
     def execute(self, game):
         self.validate(game)
 
-        sprint(f"{self.meld_data}")
-
         game.hands[game.mover] = [
             card
             for i, card in enumerate(game.hands[game.mover])
@@ -315,8 +317,6 @@ class DiscardAction(Action):
         discarded_card = game.hands[game.mover].pop(self.card_index)
 
         game.discard_pile.append(discarded_card)
-
-        print(f"Discarded {discarded_card}\n\n")
 
 
 class Game:
@@ -358,11 +358,10 @@ class Game:
             hand.extend(self.draw_many(13))
             hand.sort(key=lambda c: c.index)
 
-            print_hand(hand)
+            Card.print_cards(hand)
 
     @staticmethod
     def turn_contains(turn: list[Action], sort):
-        print(turn, sort)
         return bool(
             next((action for action in turn if isinstance(action, sort)), False)
         )
@@ -503,151 +502,3 @@ class Game:
             raise InvalidMeld("no valid run possible")
 
         return runs
-
-
-test_sets = [
-    "♣2, ♦2",
-    "♣2, ♦2, ♥2",
-    "♣3, ♥3, ♥3",
-    "J., J., ♥2",
-    "♣2, ♦2, ♥2, J.",
-    "♣2, ♦2, J., J.",
-    "J., ♦2, J., J.",
-    "♥5, ♦5, J., ♠5",
-    "♥5, ♦5, J., ♠7",
-    "♣2, ♦2, ♥2, J.",
-    "♣2, ♦2, ♥2, J., J.",
-]
-
-for notation in test_sets:
-    meld = Card.from_test_notation(notation)
-    print(f"\nSet\t{meld}")
-
-    try:
-        sprint(f"{Game.validate_set(meld)}")
-    except InvalidMeld as e:
-        eprint(f"Error {e}")
-
-
-test_runs = [
-    "♣2, ♦2",
-    "♣A, ♦2, ♥3",
-    "♣A, ♣2, ♣3",
-    "♣A, ♣2, ♣3, ♣3",
-    "♣3, ♣4, ♣5, ♣6",
-    "♣A, ♣2, ♣3, ♣4, ♣5",
-    "♣A, ♣2, ♣3, J., ♣5",
-    "♣A, ♣2, ♣3, J., ♣4",
-    "♣A, ♣2, ♣3, J., ♣Q",
-    "♣A, ♣J, ♣Q, J., ♣K",
-    "♣A, ♣10, ♣J, J., ♣Q",
-    "♣A, ♣2, J., ♣4, ♣5, J., ♣7, J., J.",
-    "♣A, ♣2, ♣3, ♣4, ♣5, ♣6, ♣7, ♣8, ♣9, ♣10, ♣J, ♣K, ♣Q, J.",
-    "♣A, ♣2, ♣3, ♣4, ♣5, ♣6, ♣7, ♣8, ♣9, ♣10, ♣J, ♣K, J.",
-    "♣A, ♣2, ♣3, ♣4, ♣5, ♣6, ♣7, ♣8, ♣9, ♣10, ♣J, ♣Q, ♣K",
-    "J., ♣A, ♣2, ♣3, ♣4, ♣5, ♣6, ♣7, ♣8, ♣9, ♣10, ♣J, ♣Q",
-    "♥10, J., J., ♥Q",
-    "♥10, J., J., J., ♥Q",
-    "♥10, J., J., ♥K",
-    "♥J, J., J., ♥K",
-    "♣J, ♣Q, ♣K, J., J., J.",
-]
-
-
-for notation in test_runs:
-    meld = Card.from_test_notation(notation)
-    print(f"\nRun\t{meld}")
-
-    try:
-        sprint(f"{Game.discover_runs(meld)}")
-    except InvalidMeld as e:
-        eprint(f"Error {e}")
-
-
-def print_hand(cards):
-    for i, card in enumerate(cards):
-        if (i + 1) % 4 == 0 or i == len(cards) - 1:
-            print(f"{i: >2} {card.pretty()}")
-        else:
-            print(f"{i: >2} {card.pretty()}  ", end="")
-
-
-random.seed(1)
-
-game = Game(4)
-game.start_game()
-
-test_actions = [
-    DiscardAction(0),
-    PickUpAction(PickUpTarget.DISCARD),
-    PickUpAction(PickUpTarget.DECK),
-    PickUpAction(PickUpTarget.DECK),
-    MeldAction([0, 3, 7]),
-    MeldAction([0, 4, 7]),
-    DiscardAction(9),
-    PickUpAction(PickUpTarget.DISCARD),
-    PickUpAction(PickUpTarget.DISCARD),
-    PickUpAction(PickUpTarget.DECK),
-    MeldAction([0, 5, 8]),
-    DiscardAction(10),
-    PickUpAction(PickUpTarget.DECK),
-    MeldAction([3, 5, 9, 11]),
-    MeldAction([0, 3, 4, 7]),
-    DiscardAction(5),
-    PickUpAction(PickUpTarget.DISCARD),
-    MeldAction([5, 6, 7, 8]),
-    MeldAction([4, 5, 8]),
-    DiscardAction(4),
-    PickUpAction(PickUpTarget.DECK),
-    DiscardAction(2),
-    PickUpAction(PickUpTarget.DISCARD),
-    DiscardAction(11),
-    PickUpAction(PickUpTarget.DECK),
-    DiscardAction(5),
-    PickUpAction(PickUpTarget.DECK),
-    DiscardAction(3),
-    PickUpAction(PickUpTarget.DECK),
-    DiscardAction(12),
-    PickUpAction(PickUpTarget.DECK),
-    DiscardAction(0),
-    PickUpAction(PickUpTarget.DISCARD),
-    MeldAction([0, 1, 5]),
-    DiscardAction(2),
-    PickUpAction(PickUpTarget.DECK),
-    DiscardAction(3),
-    PickUpAction(PickUpTarget.DECK),
-    DiscardAction(4),
-    PickUpAction(PickUpTarget.DECK),
-    DiscardAction(13),
-    PickUpAction(PickUpTarget.DECK),
-    DiscardAction(2),
-    PickUpAction(PickUpTarget.DECK),
-    DiscardAction(6),
-    PickUpAction(PickUpTarget.DISCARD),
-    DiscardAction(12),
-    PickUpAction(PickUpTarget.DECK),
-    DiscardAction(0),
-    PickUpAction(PickUpTarget.DECK),
-    DiscardAction(2),
-    PickUpAction(PickUpTarget.DECK),
-    DiscardAction(6),
-    PickUpAction(PickUpTarget.DECK),
-    DiscardAction(9),
-    PickUpAction(PickUpTarget.DECK),
-    DiscardAction(6),
-    PickUpAction(PickUpTarget.DISCARD),
-    MeldAction([0, 1, 2]),
-]
-
-for action in test_actions:
-    try:
-        print(f"\n- Discard {game.discard_pile}")
-        # print(f"- Turns {game.turns}")
-        print(f"- Deck {len(game.cards)}")
-        sprint(f"Action {action}")
-
-        game.make_action(action)
-
-        print_hand(game.hands[game.mover])
-    except IllegalAction as e:
-        eprint(f"Error {e}")
