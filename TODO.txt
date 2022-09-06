@@ -4,9 +4,16 @@ Implement further game rules
     Layoffs (discard to table meld)
     Joker swapping
 
+Create online multiplayer platform
+    Game lobbies with join/leave/ready
+    Poll game state
+    Validated action requests
+    Server-push game state upon update, polling or WebSockets?
+
 6 Sep 2022
 
 Refactor Action login into subclasses, e.g. PickUpAction, which implements validation and execution logic separately
+Convert tests to pytest
 
 5 Sep 2022
 
