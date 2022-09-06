@@ -60,7 +60,7 @@ class InvalidMeld(Exception):
     pass
 
 
-class Illegalaction(Exception):
+class IllegalAction(Exception):
     pass
 
 
@@ -197,22 +197,130 @@ class ActionSort(Enum):
 
 
 class Action:
-    TARGET_DECK = 0
-    TARGET_DISCARD = 1
-
-    def __init__(self, sort, *args) -> None:
-        self.sort = sort
-        self.args = args
-
-    def __str__(self) -> str:
-        return f"<Action {self.sort.name} {self.args}>"
+    def validate(self, game):
+        return NotImplemented
 
     def __repr__(self) -> str:
         return str(self)
 
 
+class PickUpTarget(Enum):
+    DECK = 0
+    DISCARD = 1
+
+
+class PickUpAction(Action):
+    def __init__(self, target: PickUpTarget) -> None:
+        self.target = target
+
+    def validate(self, game):
+        turn = game.turns[-1]
+
+        if Game.turn_contains(turn, PickUpAction):
+            raise IllegalAction("already picked up")
+        elif self.target not in [PickUpTarget.DECK, PickUpTarget.DISCARD]:
+            raise IllegalAction("invalid pick up target")
+        elif self.target == PickUpTarget.DISCARD and len(game.turns) <= 1:
+            raise IllegalAction("cannot pick up from discard pile on first turn")
+
+    def execute(self, game):
+        self.validate(game)
+
+        if self.target == PickUpTarget.DECK:
+            card = game.draw_card()
+        elif self.target == PickUpTarget.DISCARD:
+            card = game.draw_discard()
+
+        game.hands[game.mover].append(card)
+
+        print(f"Picked up {card}")
+
+    def __str__(self) -> str:
+        return f"<Action Pick-up {self.target}>"
+
+
+class MeldAction(Action):
+    def __init__(self, card_indices) -> None:
+        self.card_indices = card_indices
+
+    def __str__(self) -> str:
+        return f"<Action Meld {self.card_indices}>"
+
+    def validate(self, game):
+        meld = [game.hands[game.mover][i] for i in self.card_indices]
+
+        print(f"Attempting {meld}")
+
+        self.meld_data = None
+
+        try:
+            self.meld_data = Game.validate_set(meld)
+        except InvalidMeld:
+            pass
+
+        try:
+            runs = Game.discover_runs(meld)
+
+            if len(runs) > 1:
+                self.meld_data = max(*runs, key=lambda meld: meld.score)
+            else:
+                self.meld_data = runs[0]
+        except InvalidMeld:
+            pass
+
+        if not self.meld_data:
+            raise IllegalAction("no valid meld for selected cards")
+
+        has_melds = len(game.melds[game.mover]) > 0
+        meld_above_threshold = self.meld_data.score >= Game.MELD_THRESHOLD
+
+        if self.meld_data and not has_melds and not meld_above_threshold:
+            raise IllegalAction(
+                f"first meld score not high enough (${self.meld_data.score} < ${Game.MELD_THRESHOLD}"
+            )
+
+    def execute(self, game):
+        self.validate(game)
+
+        sprint(f"{self.meld_data}")
+
+        game.hands[game.mover] = [
+            card
+            for i, card in enumerate(game.hands[game.mover])
+            if i not in self.card_indices
+        ]
+
+        game.melds[game.mover].append(self.meld_data)
+
+
+class DiscardAction(Action):
+    def __init__(self, card_index) -> None:
+        self.card_index = card_index
+
+    def __str__(self) -> str:
+        return f"<Action Discard {self.card_index}>"
+
+    def validate(self, game):
+        turn = game.turns[-1]
+
+        if not Game.turn_contains(turn, PickUpAction):
+            raise IllegalAction("did not pick up a card")
+
+        if self.card_index >= len(game.hands[game.mover]):
+            raise IllegalAction("card index out of range")
+
+    def execute(self, game):
+        self.validate(game)
+
+        discarded_card = game.hands[game.mover].pop(self.card_index)
+
+        game.discard_pile.append(discarded_card)
+
+        print(f"Discarded {discarded_card}\n\n")
+
+
 class Game:
-    FIRST_MELD_THRESHOLD = 40
+    MELD_THRESHOLD = 40
 
     def __init__(self, num_players) -> None:
         self.cards = [Card(card_id) for card_id in range(NUM_CARDS)]
@@ -232,7 +340,7 @@ class Game:
         if len(self.cards) > 0:
             return self.cards.pop()
         else:
-            raise Illegalaction("no card available in deck")
+            raise IllegalAction("no card available in deck")
 
     def draw_many(self, num_cards):
         return [self.draw_card() for _ in range(num_cards)]
@@ -241,7 +349,7 @@ class Game:
         if len(self.discard_pile) > 0:
             return self.discard_pile.pop()
         else:
-            raise Illegalaction("no card available in discard pile")
+            raise IllegalAction("no card available in discard pile")
 
     def start_game(self):
         self.shuffle_cards()
@@ -254,95 +362,29 @@ class Game:
 
     @staticmethod
     def turn_contains(turn: list[Action], sort):
-        return bool(next((action for action in turn if action.sort == sort), False))
+        print(turn, sort)
+        return bool(
+            next((action for action in turn if isinstance(action, sort)), False)
+        )
 
     def make_action(self, action: Action):
-        turn = self.turns[-1]
+        action.execute(self)
 
-        if action.sort == ActionSort.PICK_UP:
-            if Game.turn_contains(turn, ActionSort.PICK_UP):
-                raise Illegalaction("already picked up")
+        self.turns[-1].append(action)
 
-            target = action.args[0]
-
-            if target == Action.TARGET_DECK:
-                card = game.draw_card()
-            elif target == Action.TARGET_DISCARD:
-                if len(self.turns) <= 1:
-                    raise Illegalaction(
-                        "cannot pick up from discard pile on first turn"
-                    )
-                card = game.draw_discard()
-            else:
-                raise Illegalaction("invalid pick up target")
-
-            print(f"Picked up {card}")
-            self.hands[self.mover].append(card)
-        elif action.sort == ActionSort.MELD:
-            meld = [self.hands[self.mover][i] for i in action.args[0]]
-
-            print(f"Attempting {meld}")
-
-            meld_data = None
-
-            try:
-                meld_data = Game.validate_set(meld)
-            except InvalidMeld:
-                pass
-
-            try:
-                runs = Game.discover_runs(meld)
-
-                if len(runs) > 1:
-                    meld_data = max(*runs, key=lambda meld: meld.score)
-                else:
-                    meld_data = runs[0]
-            except InvalidMeld:
-                pass
-
-            if meld_data:
-                sprint(f"{meld_data}")
-
-                if (
-                    not self.melds[self.mover]
-                    and meld_data.score < Game.FIRST_MELD_THRESHOLD
-                ):
-                    raise Illegalaction(
-                        f"first meld score not high enough (${meld_data.score} < ${Game.FIRST_MELD_THRESHOLD}"
-                    )
-
-                self.hands[self.mover] = [
-                    card
-                    for i, card in enumerate(self.hands[self.mover])
-                    if i not in action.args[0]
-                ]
-
-                self.melds[self.mover].append(meld_data)
-            else:
-                raise Illegalaction("no valid meld for selected cards")
-        elif action.sort == ActionSort.DISCARD:
-            if not Game.turn_contains(turn, ActionSort.PICK_UP):
-                raise Illegalaction("did not pick up a card")
-
-            discarded_card = self.hands[self.mover].pop(action.args[0])
-
-            self.discard_pile.append(discarded_card)
-
-            print(f"Discarded {discarded_card}\n\n")
-
+        if isinstance(self.turns[-1][-1], DiscardAction):
             self.turns.append([])
 
-        turn.append(action)
-
         if not self.hands[self.mover]:
-            print("Game over")
+            self.end_game()
 
-            for player, hand in enumerate(self.hands):
-                score = Game.score_cards(hand)
-                tournament_score = Game.tournament_score(
-                    score, len(self.melds[player]) > 0
-                )
-                print(f"{player}  {score: >4}  {tournament_score: >3}")
+    def end_game(self):
+        sprint("Game over")
+
+        for player, hand in enumerate(self.hands):
+            score = Game.score_cards(hand)
+            tournament_score = Game.tournament_score(score, len(self.melds[player]) > 0)
+            print(f"{player}  {score: >4}  {tournament_score: >3}")
 
     @staticmethod
     def tournament_score(score, opened):
@@ -536,65 +578,65 @@ game = Game(4)
 game.start_game()
 
 test_actions = [
-    Action(ActionSort.DISCARD, 0),
-    Action(ActionSort.PICK_UP, 1),
-    Action(ActionSort.PICK_UP, 0),
-    Action(ActionSort.PICK_UP, 0),
-    Action(ActionSort.MELD, [0, 3, 7]),
-    Action(ActionSort.MELD, [0, 4, 7]),
-    Action(ActionSort.DISCARD, 9),
-    Action(ActionSort.PICK_UP, 1),
-    Action(ActionSort.PICK_UP, 1),
-    Action(ActionSort.PICK_UP, 0),
-    Action(ActionSort.MELD, [0, 5, 8]),
-    Action(ActionSort.DISCARD, 11),
-    Action(ActionSort.PICK_UP, 0),
-    Action(ActionSort.MELD, [3, 5, 9, 11]),
-    Action(ActionSort.MELD, [0, 3, 4, 7]),
-    Action(ActionSort.DISCARD, 5),
-    Action(ActionSort.PICK_UP, 1),
-    Action(ActionSort.MELD, [5, 6, 7, 8]),
-    Action(ActionSort.MELD, [4, 5, 8]),
-    Action(ActionSort.DISCARD, 4),
-    Action(ActionSort.PICK_UP, 0),
-    Action(ActionSort.DISCARD, 2),
-    Action(ActionSort.PICK_UP, 1),
-    Action(ActionSort.DISCARD, 11),
-    Action(ActionSort.PICK_UP, 0),
-    Action(ActionSort.DISCARD, 5),
-    Action(ActionSort.PICK_UP, 0),
-    Action(ActionSort.DISCARD, 3),
-    Action(ActionSort.PICK_UP, 0),
-    Action(ActionSort.DISCARD, 12),
-    Action(ActionSort.PICK_UP, 0),
-    Action(ActionSort.DISCARD, 0),
-    Action(ActionSort.PICK_UP, 1),
-    Action(ActionSort.MELD, [0, 1, 5]),
-    Action(ActionSort.DISCARD, 2),
-    Action(ActionSort.PICK_UP, 0),
-    Action(ActionSort.DISCARD, 3),
-    Action(ActionSort.PICK_UP, 0),
-    Action(ActionSort.DISCARD, 4),
-    Action(ActionSort.PICK_UP, 0),
-    Action(ActionSort.DISCARD, 13),
-    Action(ActionSort.PICK_UP, 0),
-    Action(ActionSort.DISCARD, 2),
-    Action(ActionSort.PICK_UP, 0),
-    Action(ActionSort.DISCARD, 6),
-    Action(ActionSort.PICK_UP, 1),
-    Action(ActionSort.DISCARD, 12),
-    Action(ActionSort.PICK_UP, 0),
-    Action(ActionSort.DISCARD, 0),
-    Action(ActionSort.PICK_UP, 0),
-    Action(ActionSort.DISCARD, 2),
-    Action(ActionSort.PICK_UP, 0),
-    Action(ActionSort.DISCARD, 6),
-    Action(ActionSort.PICK_UP, 0),
-    Action(ActionSort.DISCARD, 9),
-    Action(ActionSort.PICK_UP, 0),
-    Action(ActionSort.DISCARD, 6),
-    Action(ActionSort.PICK_UP, 1),
-    Action(ActionSort.MELD, [0, 1, 2]),
+    DiscardAction(0),
+    PickUpAction(PickUpTarget.DISCARD),
+    PickUpAction(PickUpTarget.DECK),
+    PickUpAction(PickUpTarget.DECK),
+    MeldAction([0, 3, 7]),
+    MeldAction([0, 4, 7]),
+    DiscardAction(9),
+    PickUpAction(PickUpTarget.DISCARD),
+    PickUpAction(PickUpTarget.DISCARD),
+    PickUpAction(PickUpTarget.DECK),
+    MeldAction([0, 5, 8]),
+    DiscardAction(10),
+    PickUpAction(PickUpTarget.DECK),
+    MeldAction([3, 5, 9, 11]),
+    MeldAction([0, 3, 4, 7]),
+    DiscardAction(5),
+    PickUpAction(PickUpTarget.DISCARD),
+    MeldAction([5, 6, 7, 8]),
+    MeldAction([4, 5, 8]),
+    DiscardAction(4),
+    PickUpAction(PickUpTarget.DECK),
+    DiscardAction(2),
+    PickUpAction(PickUpTarget.DISCARD),
+    DiscardAction(11),
+    PickUpAction(PickUpTarget.DECK),
+    DiscardAction(5),
+    PickUpAction(PickUpTarget.DECK),
+    DiscardAction(3),
+    PickUpAction(PickUpTarget.DECK),
+    DiscardAction(12),
+    PickUpAction(PickUpTarget.DECK),
+    DiscardAction(0),
+    PickUpAction(PickUpTarget.DISCARD),
+    MeldAction([0, 1, 5]),
+    DiscardAction(2),
+    PickUpAction(PickUpTarget.DECK),
+    DiscardAction(3),
+    PickUpAction(PickUpTarget.DECK),
+    DiscardAction(4),
+    PickUpAction(PickUpTarget.DECK),
+    DiscardAction(13),
+    PickUpAction(PickUpTarget.DECK),
+    DiscardAction(2),
+    PickUpAction(PickUpTarget.DECK),
+    DiscardAction(6),
+    PickUpAction(PickUpTarget.DISCARD),
+    DiscardAction(12),
+    PickUpAction(PickUpTarget.DECK),
+    DiscardAction(0),
+    PickUpAction(PickUpTarget.DECK),
+    DiscardAction(2),
+    PickUpAction(PickUpTarget.DECK),
+    DiscardAction(6),
+    PickUpAction(PickUpTarget.DECK),
+    DiscardAction(9),
+    PickUpAction(PickUpTarget.DECK),
+    DiscardAction(6),
+    PickUpAction(PickUpTarget.DISCARD),
+    MeldAction([0, 1, 2]),
 ]
 
 for action in test_actions:
@@ -607,5 +649,5 @@ for action in test_actions:
         game.make_action(action)
 
         print_hand(game.hands[game.mover])
-    except Illegalaction as e:
+    except IllegalAction as e:
         eprint(f"Error {e}")
