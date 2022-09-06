@@ -4,6 +4,10 @@ Implement further game rules
     Layoffs (discard to table meld)
     Joker swapping
 
+6 Sep 2022
+
+Refactor Action login into subclasses, e.g. PickUpAction, which implements validation and execution logic separately
+
 5 Sep 2022
 
 Implement meld control (40 points for first meld) and game end scoring
