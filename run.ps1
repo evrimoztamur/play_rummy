@@ -1,0 +1,1 @@
+flask --app play_rummy.app --debug run
