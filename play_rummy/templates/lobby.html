@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;700" rel="stylesheet">
+    <style>
+        html {
+            font: 16px 'Source Sans Pro', sans-serif;
+        }
+
+        body {
+            font-size: 14px;
+            font-weight: 500;
+            width: 40rem;
+            margin: auto;
+        }
+
+        input,
+        button {
+            font-family: inherit;
+        }
+
+        button {
+            appearance: none;
+            border: none;
+            background-color:aliceblue;
+            border-radius: .125rem;
+            padding: .25rem 1rem;
+            margin: .125rem;
+            cursor: pointer;
+            border: 1px solid #0003;
+        }
+
+        button.button-action {
+            background-color: lightseagreen;
+            color:azure;
+        }
+
+        span.badge {
+            display: inline-flex;
+            background-color: aliceblue;
+            border-radius: .25rem;
+            padding: .125rem .5rem;
+            cursor: default;
+            font-weight: bold;
+        }
+
+        span.badge.badge-player {
+            background-color:plum;
+        }
+
+        div.flex {
+            display: flex;
+        }
+    </style>
+</head>
+
+<body>
+    <h4><a href="{{ url_for('get_index') }}">Play Rummy!</a></h4>
+    <h3>Lobby #{{ lobby_id }}</h3>
+    <p>Players: {{ lobby.players|length }} / {{ lobby.game.hands|length }}</p>
+    {% if session_id not in lobby.players %}
+    <p>
+    <form method="POST" action="{{ url_for('post_lobby_join', lobby_id=lobby_id)}}"><button class="button-action">Join
+            lobby</button></form>
+    </p>
+    {% else %}
+    <p>Player <span class="badge badge-player">{{ lobby.players[session_id] }}</span></p>
+    <div class="flex">
+        <form method="POST" action="{{ url_for('post_lobby_leave', lobby_id=lobby_id)}}">
+            <button class="button-action">Ready!</button>
+        </form>
+        <form method="POST" action="{{ url_for('post_lobby_leave', lobby_id=lobby_id)}}"><button>Leave lobby</button>
+        </form>
+    </div>
+    {% endif %}
+</body>
+
+</html>
