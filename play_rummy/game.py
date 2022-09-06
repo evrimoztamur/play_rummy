@@ -191,10 +191,10 @@ class Card:
 
     def __eq__(self, other):
         if isinstance(other, Card):
-            return (
-                not (self.is_joker and other.is_joker)
-                and self.__hash__() == other.__hash__()
+            return self.__hash__() == other.__hash__() and not (
+                self.is_joker and other.is_joker
             )
+
         return NotImplemented
 
 
