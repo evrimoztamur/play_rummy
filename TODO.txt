@@ -5,10 +5,14 @@ Implement further game rules
     Joker swapping
 
 Create online multiplayer platform
-    Game lobbies with join/leave/ready
+    Ready state to start game
     Poll game state
     Validated action requests
     Server-push game state upon update, polling or WebSockets?
+
+7 Sep 2022
+
+Implement sessions and game lobbies with join/leave
 
 6 Sep 2022
 
