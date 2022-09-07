@@ -99,13 +99,13 @@ def get_lobby(lobby_id):
     _, session_id = identify_player()
 
     if lobby is not None:
-        cards = filter_shuffle(
-            [
+        cards = [
                 (suit, rank)
                 for suit in ["diamonds", "hearts", "clubs", "spades"]
                 for rank in CARD_RANKS
-            ]
-        )[:13]
+        ]
+        random.shuffle(cards)
+        cards = cards[:13]
         context = {
             "lobby_id": lobby_id,
             "lobby": lobby,
@@ -183,13 +183,3 @@ def svg_icon_processor():
         return svg_tag
 
     return dict(svg_icon=svg_icon)
-
-
-@app.template_filter("shuffle")
-def filter_shuffle(seq):
-    try:
-        result = list(seq)
-        random.shuffle(result)
-        return result
-    except:
-        return seq
