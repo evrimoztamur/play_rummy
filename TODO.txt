@@ -12,7 +12,8 @@ Create online multiplayer platform
 
 7 Sep 2022
 
-Implement sessions and game lobbies with join/leave
+Implement sessions and game lobbies with join/leave/ready
+Implement card display from SVG icons into HTML card node
 
 6 Sep 2022
 
