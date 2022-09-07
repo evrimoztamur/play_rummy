@@ -1,8 +1,9 @@
 from base64 import b32encode
 from os import urandom
+import random
 from time import time
 from flask import Flask, redirect, url_for, render_template, request
-from play_rummy.game import Game
+from play_rummy.game import CARD_RANKS, Game
 
 app = Flask(__name__)
 
@@ -12,6 +13,20 @@ def make_token(nbytes=4):
     timestamp = int(time()).to_bytes(4, byteorder="big")
 
     return b32encode(timestamp + tok).rstrip(b"=").decode("ascii").lower()
+
+
+class InvalidQuery(Exception):
+    pass
+
+
+class Player:
+    def __init__(self, index) -> None:
+        self.index = index
+        self.ready = False
+
+    @property
+    def number(self):
+        return self.index + 1
 
 
 class Lobby:
@@ -25,12 +40,30 @@ class Lobby:
         return len(self.game.hands)
 
     def join_player(self, session_id) -> str:
-        self.players[session_id] = self.player_slots.pop(0)
-        return session_id
+        player = self.players.get(session_id)
 
-    def leave_player(self, session_id) -> str:
-        self.player_slots.append(self.players[session_id])
-        del self.players[session_id]
+        if player:
+            raise InvalidQuery("already in lobby")
+        else:
+            self.players[session_id] = Player(self.player_slots.pop(0))
+            return session_id
+
+    def leave_player(self, session_id):
+        player = self.players.get(session_id)
+
+        if player:
+            self.player_slots.append(self.players[session_id].index)
+            del self.players[session_id]
+        else:
+            raise InvalidQuery("player not in lobby")
+
+    def ready_player(self, session_id):
+        player = self.players.get(session_id)
+
+        if player:
+            player.ready = True
+        else:
+            raise InvalidQuery("cannot ready a player which is not in lobby")
 
 
 lobbies = {}
@@ -120,6 +153,18 @@ def post_lobby_leave(lobby_id):
     else:
         return "<p>Lobby not found</p>"
 
+
+@app.post("/lobby/<lobby_id>/ready")
+def post_lobby_ready(lobby_id):
+    lobby = lobbies.get(lobby_id)
+    session_found, session_id = identify_player()
+
+    if lobby is not None and session_found:
+        lobby.ready_player(session_id)
+
+        return redirect(url_for("get_lobby", lobby_id=lobby_id))
+    else:
+        return "<p>Lobby not found</p>"
 
 
 @app.context_processor

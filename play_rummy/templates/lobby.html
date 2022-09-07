@@ -152,23 +152,32 @@
 
 <body>
     <h4><a href="{{ url_for('get_index') }}">Play Rummy!</a></h4>
-    <h3>Lobby #{{ lobby_id }}</h3>
-    <p>Players: {{ lobby.players|length }} / {{ lobby.game.hands|length }}</p>
-    {% if session_id not in lobby.players %}
-    <p>
-    <form method="POST" action="{{ url_for('post_lobby_join', lobby_id=lobby_id)}}"><button class="button-action">Join
-            lobby</button></form>
-    </p>
-    {% else %}
-    <p>Player <span class="badge badge-player">{{ lobby.players[session_id] }}</span></p>
-    <div class="flex">
-        <form method="POST" action="{{ url_for('post_lobby_leave', lobby_id=lobby_id)}}">
-            <button class="button-action">Ready!</button>
-        </form>
-        <form method="POST" action="{{ url_for('post_lobby_leave', lobby_id=lobby_id)}}"><button>Leave lobby</button>
-        </form>
+    <h3>Lobby <strong>#{{ lobby_id }}</strong></h3>
+    <div class="game-status flex">
+        <div>Players: {{ lobby.players|length }} / {{ lobby.game.hands|length }}</div>
+        {% if session_id not in lobby.players %}
+        <div class="flex ms-auto">
+            <form method="POST" action="{{ url_for('post_lobby_join', lobby_id=lobby_id)}}"><button
+                    class="button-action">Join
+                    lobby</button></form>
+        </div>
+        {% else %}
+        {% set player = lobby.players[session_id] %}
+        <div class="ms-frem"><span class="badge badge-player{% if player.ready %} badge-player-ready{% endif %}">Player
+                <strong class="ms-hrem">#{{ lobby.players[session_id].number }}</strong>{% if player.ready %} <strong
+                    class="ms-hrem">&check;</strong>{% endif %}</span></div>
+        <div class="flex ms-auto">
+            {% if not player.ready %}
+            <form method="POST" action="{{ url_for('post_lobby_ready', lobby_id=lobby_id)}}">
+                <button class="button-action">Ready!</button>
+            </form>
+            {% endif %}
+            <form method="POST" action="{{ url_for('post_lobby_leave', lobby_id=lobby_id)}}"><button>Leave
+                    lobby</button>
+            </form>
+        </div>
+        {% endif %}
     </div>
-    {% endif %}
     <div class="deck flex">
         {% for suit, rank in cards %}
         {% set suit = "suit-" + suit %}
