@@ -75,6 +75,10 @@ svg.icon-suit.icon-suit-spades {
     color: #0b1728;
 }
 
+svg.icon-suit.icon-suit-joker {
+    color: mediumorchid;
+}
+
 svg.icon-rank {
     color: darkslateblue;
 }
@@ -94,6 +98,10 @@ div.card svg.icon-rank {
     position: absolute;
     top: 0;
     left: 0;
+}
+
+div.card.suit-joker svg.icon-rank {
+    color: lavender;
 }
 
 div.card.card-selected {

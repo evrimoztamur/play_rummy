@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;700" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+
+<body>
+    {% set session_player = lobby.players.get(session_id) %}
+    <h4><a href="{{ url_for('get_index') }}">Play Rummy!</a></h4>
+    <h3>Lobby <strong>#{{ lobby_id }}</strong></h3>
+    <div class="game-status flex">
+        <div>Players: {{ lobby.players|length }} / {{ lobby.game.hands|length }}</div>
+        {% for player in lobby.players.values() %}
+        <div class="ms-frem">
+            <span class="badge badge-player{% if player.index == lobby.game.mover %} badge-player-ready{% endif %}">
+                {% if player == session_player %}
+                You <strong class="ms-hrem">#{{ player.number }}</strong>
+                {% else %}
+                <strong>#{{ player.number }}</strong>
+                {% endif %}
+            </span>
+        </div>
+        {% endfor %}
+        <div class="flex ms-auto">
+            <form method="POST" action="{{ url_for('post_lobby_leave', lobby_id=lobby_id)}}"><button>Leave
+                    game</button>
+            </form>
+        </div>
+    </div>
+    {% if lobby.game.started %}
+    <div class="deck flex">
+        {% for card in lobby.hand_for(session_id) %}
+        {% set display_tuple = card.display_tuple %}
+        {% set suit = "suit-" + display_tuple[0] %}
+        {% set rank = "rank-" + display_tuple[1] %}
+        <div class="card {{ suit }} {{ rank }}">
+            {{ svg_icon(suit, "suit")|safe }}
+            {{ svg_icon(suit, "suit", "rotated")|safe }}
+            {{ svg_icon(rank, "rank")|safe }}
+            {{ svg_icon(rank, "rank", "rotated")|safe }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% include "svg/card.svg" %}
+</body>
+
+</html>

@@ -1,9 +1,8 @@
 from base64 import b32encode
 from os import urandom
-import random
 from time import time
 from flask import Flask, redirect, url_for, render_template, request
-from play_rummy.game import CARD_RANKS, Game
+from play_rummy.game import Game
 
 app = Flask(__name__)
 
@@ -39,6 +38,14 @@ class Lobby:
     def max_players(self):
         return len(self.game.hands)
 
+    def hand_for(self, session_id):
+        player = self.players.get(session_id)
+
+        if player:
+            return self.game.hands[player.index]
+        else:
+            raise InvalidQuery("player not in lobby")
+
     def join_player(self, session_id) -> str:
         player = self.players.get(session_id)
 
@@ -54,14 +61,26 @@ class Lobby:
         if player:
             self.player_slots.append(self.players[session_id].index)
             del self.players[session_id]
+
+            if self.game.started:
+                self.game.end_game()
         else:
             raise InvalidQuery("player not in lobby")
+
+    @property
+    def all_players_ready(self):
+        return len(self.players) == self.max_players and all(
+            player.ready for player in self.players.values()
+        )
 
     def ready_player(self, session_id):
         player = self.players.get(session_id)
 
         if player:
             player.ready = True
+
+            if self.all_players_ready:
+                self.game.start_game()
         else:
             raise InvalidQuery("cannot ready a player which is not in lobby")
 
@@ -88,7 +107,7 @@ def get_index():
 @app.post("/lobby/create")
 def post_lobby_create():
     lobby_id = make_token()
-    lobbies[lobby_id] = Lobby(Game(4))
+    lobbies[lobby_id] = Lobby(Game(2))
 
     return post_lobby_join(lobby_id)
 
@@ -99,21 +118,16 @@ def get_lobby(lobby_id):
     _, session_id = identify_player()
 
     if lobby is not None:
-        cards = [
-                (suit, rank)
-                for suit in ["diamonds", "hearts", "clubs", "spades"]
-                for rank in CARD_RANKS
-        ]
-        random.shuffle(cards)
-        cards = cards[:13]
         context = {
             "lobby_id": lobby_id,
             "lobby": lobby,
             "session_id": session_id,
-            "cards": cards,
         }
 
-        return render_template("lobby.html", **context)
+        if lobby.game.started:
+            return render_template("lobby_started.html", **context)
+        else:
+            return render_template("lobby_prepared.html", **context)
     else:
         return "<p>Lobby not found</p>"
 

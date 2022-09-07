@@ -12,6 +12,7 @@ def sprint(message):
 
 
 CARD_SUITS = ["♦", "♥", "♣", "♠"]
+CARD_SUIT_NAMES = ["diamonds", "hearts", "clubs", "spades", "joker"]
 CARD_RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
 
 NUM_DECKS = 2
@@ -72,10 +73,10 @@ class Card:
 
         if deck_index >= NUM_SUIT_CARDS:
             self.suit = NUM_SUITS
-            self.rank = deck_index % NUM_RANKS - NUM_SUIT_CARDS
         else:
             self.suit = deck_index // NUM_RANKS
-            self.rank = deck_index % NUM_RANKS
+
+        self.rank = deck_index % NUM_RANKS
 
     @staticmethod
     def from_suit_rank(suit, rank):
@@ -163,6 +164,11 @@ class Card:
     @staticmethod
     def has_duplicates(cards):
         return len(set(cards)) != len(cards)
+
+    @property
+    def display_tuple(self):
+        print(self.suit, self.rank)
+        return (CARD_SUIT_NAMES[self.suit], CARD_RANKS[self.rank])
 
     def __str__(self) -> str:
         return self.name()
@@ -319,6 +325,12 @@ class DiscardAction(Action):
         game.discard_pile.append(discarded_card)
 
 
+class GameState:
+    PREPARED = 0
+    STARTED = 1
+    ENDED = 2
+
+
 class Game:
     MELD_THRESHOLD = 40
 
@@ -328,6 +340,15 @@ class Game:
         self.melds = [[] for _ in range(num_players)]
         self.discard_pile = []
         self.turns = [[]]
+        self.state = GameState.PREPARED
+
+    @property
+    def started(self):
+        return self.state == GameState.STARTED
+
+    @property
+    def ended(self):
+        return self.state == GameState.ENDED
 
     @property
     def mover(self):
@@ -351,15 +372,6 @@ class Game:
         else:
             raise IllegalAction("no card available in discard pile")
 
-    def start_game(self):
-        self.shuffle_cards()
-
-        for hand in self.hands:
-            hand.extend(self.draw_many(13))
-            hand.sort(key=lambda c: c.index)
-
-            Card.print_cards(hand)
-
     @staticmethod
     def turn_contains(turn: list[Action], sort):
         return bool(
@@ -377,6 +389,17 @@ class Game:
         if not self.hands[self.mover]:
             self.end_game()
 
+    def start_game(self):
+        self.shuffle_cards()
+
+        for hand in self.hands:
+            hand.extend(self.draw_many(13))
+            hand.sort(key=lambda c: c.index)
+
+            Card.print_cards(hand)
+
+        self.state = GameState.STARTED
+
     def end_game(self):
         sprint("Game over")
 
@@ -384,6 +407,8 @@ class Game:
             score = Game.score_cards(hand)
             tournament_score = Game.tournament_score(score, len(self.melds[player]) > 0)
             print(f"{player}  {score: >4}  {tournament_score: >3}")
+
+        self.state = GameState.ENDED
 
     @staticmethod
     def tournament_score(score, opened):
