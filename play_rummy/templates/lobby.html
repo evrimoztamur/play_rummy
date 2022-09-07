@@ -13,10 +13,18 @@
 </head>
 
 <body>
+    {% set session_player = lobby.players.get(session_id) %}
     <h4><a href="{{ url_for('get_index') }}">Play Rummy!</a></h4>
     <h3>Lobby <strong>#{{ lobby_id }}</strong></h3>
     <div class="game-status flex">
         <div>Players: {{ lobby.players|length }} / {{ lobby.game.hands|length }}</div>
+        {% for player in lobby.players.values() %}
+        {% if player != session_player %}
+        <div class="ms-frem"><span class="badge badge-player{% if player.ready %} badge-player-ready{% endif %}">
+                <strong>#{{ player.number }}</strong>{% if player.ready %} <strong
+                    class="ms-hrem">&check;</strong>{% endif %}</span></div>
+        {% endif %}
+        {% endfor %}
         {% if session_id not in lobby.players %}
         <div class="flex ms-auto">
             <form method="POST" action="{{ url_for('post_lobby_join', lobby_id=lobby_id)}}"><button
@@ -24,12 +32,11 @@
                     lobby</button></form>
         </div>
         {% else %}
-        {% set player = lobby.players[session_id] %}
-        <div class="ms-frem"><span class="badge badge-player{% if player.ready %} badge-player-ready{% endif %}">Player
-                <strong class="ms-hrem">#{{ lobby.players[session_id].number }}</strong>{% if player.ready %} <strong
+        <div class="ms-frem"><span class="badge badge-player{% if session_player.ready %} badge-player-ready{% endif %}">You
+                <strong class="ms-hrem">#{{ session_player.number }}</strong>{% if session_player.ready %} <strong
                     class="ms-hrem">&check;</strong>{% endif %}</span></div>
         <div class="flex ms-auto">
-            {% if not player.ready %}
+            {% if not session_player.ready %}
             <form method="POST" action="{{ url_for('post_lobby_ready', lobby_id=lobby_id)}}">
                 <button class="button-action">Ready!</button>
             </form>
