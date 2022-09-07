@@ -66,7 +66,19 @@ def get_lobby(lobby_id):
     _, session_id = identify_player()
 
     if lobby is not None:
-        context = {"lobby_id": lobby_id, "lobby": lobby, "session_id": session_id}
+        cards = filter_shuffle(
+            [
+                (suit, rank)
+                for suit in ["diamonds", "hearts", "clubs", "spades"]
+                for rank in CARD_RANKS
+            ]
+        )[:13]
+        context = {
+            "lobby_id": lobby_id,
+            "lobby": lobby,
+            "session_id": session_id,
+            "cards": cards,
+        }
 
         return render_template("lobby.html", **context)
     else:
@@ -107,3 +119,29 @@ def post_lobby_leave(lobby_id):
             return redirect(url_for("get_lobby", lobby_id=lobby_id))
     else:
         return "<p>Lobby not found</p>"
+
+
+
+@app.context_processor
+def svg_icon_processor():
+    def svg_icon(icon_name, *args):
+        class_list = " ".join(
+            (["icon-{}".format(icon_name)] + list(args if args is not None else []))
+        )
+        svg_tag = '<svg viewbox="0 0 40 48" class="{class_list}"><use href="#{icon_name}"></use></svg>'.format(
+            icon_name=icon_name, class_list=class_list
+        )
+
+        return svg_tag
+
+    return dict(svg_icon=svg_icon)
+
+
+@app.template_filter("shuffle")
+def filter_shuffle(seq):
+    try:
+        result = list(seq)
+        random.shuffle(result)
+        return result
+    except:
+        return seq
