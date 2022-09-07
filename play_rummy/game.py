@@ -341,6 +341,7 @@ class Game:
         self.discard_pile = []
         self.turns = [[]]
         self.state = GameState.PREPARED
+        self.scores = [(0, 0) for _ in range(num_players)]
 
     @property
     def started(self):
@@ -401,12 +402,13 @@ class Game:
         self.state = GameState.STARTED
 
     def end_game(self):
-        sprint("Game over")
-
         for player, hand in enumerate(self.hands):
             score = Game.score_cards(hand)
-            tournament_score = Game.tournament_score(score, len(self.melds[player]) > 0)
-            print(f"{player}  {score: >4}  {tournament_score: >3}")
+            opened = len(self.melds[player]) > 0
+            tournament_score = Game.tournament_score(
+                score, opened
+            )
+            self.scores[player] = (score, tournament_score, opened)
 
         self.state = GameState.ENDED
 
@@ -431,6 +433,9 @@ class Game:
     @staticmethod
     def score_cards(cards):
         return sum([card.score for card in cards])
+
+    def score_for(self, player):
+        return self.score_cards(self.hands[player])
 
     @staticmethod
     def validate_set(cards):
