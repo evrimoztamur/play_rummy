@@ -1,8 +1,10 @@
 from base64 import b32encode
 from os import urandom
+import random
 from time import time
 from flask import Flask, redirect, url_for, render_template, request
 from play_rummy.game import Game
+from tests.replays import TEST_REPLAYS
 
 app = Flask(__name__)
 
@@ -150,6 +152,8 @@ def get_lobby(lobby_id):
 
         if lobby.game.started:
             return render_template("lobby_started.html", **context)
+        elif lobby.game.ended:
+            return render_template("lobby_ended.html", **context)
         else:
             return render_template("lobby_prepared.html", **context)
     else:

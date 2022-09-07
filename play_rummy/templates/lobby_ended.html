@@ -13,6 +13,7 @@
 </head>
 
 <body>
+    {% from 'macros.html' import display_cards with context  %}
     {% set session_player = lobby.players.get(session_id) %}
     <h4><a href="{{ url_for('get_index') }}">Play Rummy!</a></h4>
     <h3>Lobby <strong>#{{ lobby_id }}</strong></h3>
@@ -25,28 +26,43 @@
                     class="ms-hrem">&check;</strong>{% endif %}</span></div>
         {% endif %}
         {% endfor %}
-        {% if session_id not in lobby.players %}
-        <div class="flex ms-auto">
-            <form method="POST" action="{{ url_for('post_lobby_join', lobby_id=lobby_id)}}"><button
-                    class="button-action">Join lobby</button></form>
-        </div>
-        {% else %}
+        {% if session_id in lobby.players %}
         <div class="ms-frem"><span
                 class="badge badge-player{% if session_player.ready %} badge-player-ready{% endif %}">You
                 <strong class="ms-hrem">#{{ session_player.number }}</strong>{% if session_player.ready %} <strong
                     class="ms-hrem">&check;</strong>{% endif %}</span></div>
-        <div class="flex ms-auto">
-            {% if not session_player.ready %}
-            <form method="POST" action="{{ url_for('post_lobby_ready', lobby_id=lobby_id)}}">
-                <button class="button-action">Ready!</button>
-            </form>
-            {% endif %}
-            <form method="POST" action="{{ url_for('post_lobby_leave', lobby_id=lobby_id)}}"><button>Leave
-                    lobby</button>
-            </form>
-        </div>
         {% endif %}
     </div>
+    {% if not lobby.all_ready %}
+    <h4>Ended without finishing</h4>
+    {% endif %}
+    <h4>Players</h4>
+    <ol>
+        {% for hand in lobby.game.hands %}
+        {% set score = lobby.game.scores[loop.index0] %}
+        {% set melds = lobby.game.melds[loop.index0] %}
+        <li>Score <span class="badge">{{ score[0] }}</span> <span class="badge">{{ score[1] }}</span>
+            {% if score[2] %}<span class="badge">Opened</span>{% endif %}
+            {{ display_cards(hand, True) }}
+            <div class="deck-series flex">
+                {% for meld in melds %}
+                {{ display_cards(meld.cards, True) }}
+                {% endfor %}
+            </div>
+        </li>
+        {% endfor %}
+    </ol>
+    <h4>Deck</h4>
+    {{ display_cards(lobby.game.cards, True) }}
+    <h4>Discard pile</h4>
+    {{ display_cards(lobby.game.discard_pile, True) }}
+    <h4>Turns</h4>
+    <ol>
+        {% for turn in lobby.game.turns %}
+        <li>{{ turn }}</li>
+        {% endfor %}
+    </ol>
+    {% include "svg/card.svg" %}
 </body>
 
 </html>

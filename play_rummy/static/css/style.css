@@ -38,6 +38,10 @@ span.badge {
     cursor: default;
 }
 
+span.badge.badge-full {
+    display: flex;
+}
+
 span.badge.badge-player {
     background-color: gainsboro;
 }
@@ -87,10 +91,12 @@ div.card {
     position: relative;
     min-width: 5rem;
     height: 6rem;
-    background-color: aliceblue;
+    background-color: white;
     border-radius: .5rem;
     border: 1px solid #0002;
-    margin: .5rem
+    margin: .5rem;
+    margin-right: -3rem;
+    cursor: default;
 }
 
 div.card svg.icon-suit,
@@ -101,18 +107,45 @@ div.card svg.icon-rank {
 }
 
 div.card.suit-joker svg.icon-rank {
-    color: lavender;
+    color: transparent;
 }
 
-div.card.card-selected {
-    border-width: 4px;
-    border-color: cadetblue;
-    margin: calc(.5rem - 3px);
-    box-shadow: 0 0 .25rem cadetblue;
+div.card.card-label {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #0b1728;
 }
 
-div.deck div.card:not(:first-child) {
-    margin-left: -3rem;
+input[name="selected_card_id"] {
+    display: none;
+}
+
+label[for] div.card {
+    cursor: pointer;
+}
+
+input[name="selected_card_id"]:checked+label div.card {
+    background-color: powderblue;
+    box-shadow: 0 0 .25rem powderblue;
+}
+
+div.deck.deck-small {
+    margin: .25rem;
+}
+
+div.deck.deck-small div.card {
+    min-width: 2.5rem;
+    height: 3rem;
+    border-radius: .25rem;
+    margin: .25rem;
+    margin-right: -1.5rem;
+}
+
+div.deck-series div.deck {
+    margin-right: 2rem;
 }
 
 div.game-status {
@@ -142,4 +175,13 @@ h4,
 h5,
 h6 {
     font-weight: normal;
+    margin-bottom: .5rem;
+}
+
+ol {
+    padding-left: 0;
+}
+
+ol li {
+    margin-bottom: .25rem;
 }

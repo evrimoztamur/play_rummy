@@ -13,6 +13,7 @@
 </head>
 
 <body>
+    {% from 'macros.html' import display_cards with context  %}
     {% set session_player = lobby.players.get(session_id) %}
     <h4><a href="{{ url_for('get_index') }}">Play Rummy!</a></h4>
     <h3>Lobby <strong>#{{ lobby_id }}</strong></h3>
@@ -35,22 +36,44 @@
             </form>
         </div>
     </div>
-    {% if lobby.game.started %}
-    <div class="deck flex">
-        {% for card in lobby.hand_for(session_id) %}
-        {% set display_tuple = card.display_tuple %}
-        {% set suit = "suit-" + display_tuple[0] %}
-        {% set rank = "rank-" + display_tuple[1] %}
-        <div class="card {{ suit }} {{ rank }}">
-            {{ svg_icon(suit, "suit")|safe }}
-            {{ svg_icon(suit, "suit", "rotated")|safe }}
-            {{ svg_icon(rank, "rank")|safe }}
-            {{ svg_icon(rank, "rank", "rotated")|safe }}
+    <br>
+    <span class="badge badge-full">Table</span>
+    <div class="deck-series flex">
+        <div class="deck deck-small flex">
+            <div class="card card-label">{{ lobby.game.cards|length }}</div>
         </div>
+        {{ display_cards(lobby.game.discard_pile, True) }}
+    </div>
+    <br>
+    {% for player in lobby.players.values() %}
+    <span class="badge badge-full badge-player{% if player.index == lobby.game.mover %} badge-player-ready{% endif %}">
+        {% if player == session_player %}
+        You <strong class="ms-hrem">#{{ player.number }}</strong>
+        {% else %}
+        <strong>#{{ player.number }}</strong>
+        {% endif %}
+    </span>
+    <div class="deck-series flex">
+        <div class="deck deck-small flex">
+            <div class="card card-label">{{ lobby.game.hands[player.index]|length }}</div>
+        </div>
+        {% for meld in lobby.game.melds[player.index] %}
+        {{ display_cards(meld.cards, True) }}
         {% endfor %}
     </div>
-    {% endif %}
+    <br>
+    {% endfor %}
+    <span class="badge badge-full">Your hand</span>
+    {{ display_cards(lobby.hand_for(session_id)) }}
     {% include "svg/card.svg" %}
+    <div class="flex">
+        <form method="POST" action="{{ url_for('post_lobby_leave', lobby_id=lobby_id)}}"><button>Pick-up
+                <strong>Deck</strong></button></form>
+        <form method="POST" action="{{ url_for('post_lobby_leave', lobby_id=lobby_id)}}"><button>Pick-up
+                <strong>Discard</strong></button></form>
+        <form method="POST" action="{{ url_for('post_lobby_leave', lobby_id=lobby_id)}}"><button>Meld</button></form>
+        <form method="POST" action="{{ url_for('post_lobby_leave', lobby_id=lobby_id)}}"><button>Discard</button></form>
+    </div>
 </body>
 
 </html>
