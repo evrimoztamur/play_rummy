@@ -57,7 +57,7 @@ def test_game_replay(seed, num_players, test_actions):
         try:
             discard_top = game.discard_pile[-1] if game.discard_pile else None
 
-            sprint(f"> {action}")
+            sprint(f"> #{game.mover} {action}")
             print(f"   Deck {len(game.cards)}", end="")
             print(f"   Discard {discard_top} ({len(game.discard_pile)})")
 
