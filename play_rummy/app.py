@@ -169,12 +169,15 @@ def post_lobby_ready(lobby_id):
 
 @app.context_processor
 def svg_icon_processor():
-    def svg_icon(icon_name, *args):
+    def svg_icon(icon_name, *args, viewbox="0 0 40 48"):
         class_list = " ".join(
-            (["icon-{}".format(icon_name)] + list(args if args is not None else []))
+            [
+                "icon-{}".format(arg)
+                for arg in [icon_name, *(args if args is not None else [])]
+            ]
         )
-        svg_tag = '<svg viewbox="0 0 40 48" class="{class_list}"><use href="#{icon_name}"></use></svg>'.format(
-            icon_name=icon_name, class_list=class_list
+        svg_tag = '<svg viewbox="{viewbox}" class="{class_list}"><use href="#{icon_name}"></use></svg>'.format(
+            viewbox=viewbox, icon_name=icon_name, class_list=class_list
         )
 
         return svg_tag
