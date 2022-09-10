@@ -69,6 +69,11 @@ svg.icon-rotated {
     transform: rotate(180deg);
 }
 
+
+svg.icon-rank.icon-shifted {
+    transform: translate(40%, -50%);
+}
+
 svg.icon-suit.icon-suit-diamonds,
 svg.icon-suit.icon-suit-hearts {
     color: #c83737;
