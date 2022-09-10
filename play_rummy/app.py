@@ -124,7 +124,7 @@ class Lobby:
                 if action_target is not None:
                     return PickUpAction(action_target)
                 else:
-                    return InvalidQuery(
+                    raise InvalidQuery(
                         "pick-up action target is not provided or unknown"
                     )
             elif action_sort == "meld":
@@ -133,16 +133,16 @@ class Lobby:
                 if len(card_indices) > 0:
                     return MeldAction(card_indices)
                 else:
-                    return InvalidQuery("must select cards for a meld")
+                    raise InvalidQuery("must select cards for a meld")
             elif action_sort == "discard":
                 card_indices = self.index_selected_cards_in_hand(form)
 
                 if len(card_indices) == 1:
                     return DiscardAction(card_indices[0])
                 else:
-                    return InvalidQuery("can only discard one card per turn")
+                    raise InvalidQuery("can only discard one card per turn")
         else:
-            return InvalidQuery("action sort is not provided or unknown")
+            raise InvalidQuery("action sort is not provided or unknown")
 
     def act_player(self, session_id, form):
         player = self.players.get(session_id)
