@@ -47,6 +47,9 @@
         </div>
         {% endif %}
     </div>
+    <input type="hidden" id="ticks" value="{{ lobby.ticks }}">
+    <input type="hidden" id="state_query_uri" value="{{ url_for('get_lobby_state', lobby_id=lobby_id)}}">
+    <script src="{{ url_for('static', filename='js/poll_prepared.js') }}"></script>
 </body>
 
 </html>

@@ -42,6 +42,7 @@ class Lobby:
         self.game = game
         self.players = {}
         self.player_slots = list(range(self.max_players))
+        self.ticks = 0
 
     @property
     def max_players(self):
@@ -52,6 +53,9 @@ class Lobby:
         return len(self.players) == self.max_players and all(
             player.ready for player in self.players.values()
         )
+
+    def tick(self):
+        self.ticks += 1
 
     def hand_for(self, session_id):
         player = self.players.get(session_id)
@@ -70,6 +74,8 @@ class Lobby:
         if player:
             raise InvalidQuery("already in lobby")
         else:
+            self.tick()
+
             self.players[session_id] = Player(self.player_slots.pop(0))
             return session_id
 
@@ -80,6 +86,8 @@ class Lobby:
             raise InvalidQuery("cannot ready for an active game")
 
         if player:
+            self.tick()
+
             player.ready = True
 
             if self.all_players_ready:
@@ -94,6 +102,8 @@ class Lobby:
             raise InvalidQuery("cannot leave a finished game")
 
         if player:
+            self.tick()
+
             self.player_slots.append(self.players[session_id].index)
             del self.players[session_id]
 
@@ -204,7 +214,7 @@ def get_lobby(lobby_id):
         else:
             return render_template("lobby_prepared.html", **context)
     else:
-        return "<p>Lobby not found</p>"
+        return "<p>Lobby not available</p>"
 
 
 @app.post("/lobby/<lobby_id>/join")
@@ -222,7 +232,7 @@ def post_lobby_join(lobby_id):
         else:
             return "<p>Lobby is full!</p>"
     else:
-        return "<p>Lobby not found!</p>"
+        return "<p>Lobby not available!</p>"
 
 
 @app.post("/lobby/<lobby_id>/leave")
@@ -240,7 +250,7 @@ def post_lobby_leave(lobby_id):
         else:
             return redirect(url_for("get_lobby", lobby_id=lobby_id))
     else:
-        return "<p>Lobby not found</p>"
+        return "<p>Lobby not available</p>"
 
 
 @app.post("/lobby/<lobby_id>/ready")
@@ -253,7 +263,7 @@ def post_lobby_ready(lobby_id):
 
         return redirect(url_for("get_lobby", lobby_id=lobby_id))
     else:
-        return "<p>Lobby not found</p>"
+        return "<p>Lobby not available</p>"
 
 
 @app.post("/lobby/<lobby_id>/act")
@@ -266,7 +276,18 @@ def post_lobby_act(lobby_id):
 
         return redirect(url_for("get_lobby", lobby_id=lobby_id))
     else:
-        return "<p>Lobby not found</p>"
+        return "<p>Lobby not available</p>"
+
+
+@app.get("/lobby/<lobby_id>/state")
+def get_lobby_state(lobby_id):
+    lobby = lobbies.get(lobby_id)
+    session_found, _ = identify_player()
+
+    if lobby is not None and session_found:
+        return {"ticks": lobby.ticks}
+    else:
+        return "<p>Lobby not available</p>"
 
 
 @app.get("/lobby/<lobby_id>/game_state")
@@ -277,7 +298,7 @@ def get_lobby_game_state(lobby_id):
     if lobby is not None and session_found:
         return {"num_actions": lobby.game.num_actions, "state": lobby.game.state}
     else:
-        return "<p>Lobby not found</p>"
+        return "<p>Lobby not available</p>"
 
 
 @app.context_processor
