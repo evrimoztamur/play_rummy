@@ -4,14 +4,10 @@ Implement further game rules
     Layoffs (discard to table meld)
     Joker swapping
 
-Create online multiplayer platform
-    Add polling for prepared lobby (i.e. refresh for ready state changes and start game)
-
 Polishing
     Hide finished lobbies
     Better display for turn list on game end
     Kinder error messages for failed actions (message queue?)
-    Distinguish 6 and 9 (dash on bottom?)
 
 10 Sep 2022
 
@@ -20,6 +16,8 @@ Decided on polling as the necessary state changes are not heavy and it shouldn't
 Skip turn on pickup with 1 card at hand
 Disable action buttons when it's not your turn
 Fix game not ending on discarding last card
+Distinguish 6 and 9 by removing rotations but instead translating
+Add polling for lobby in prepared state to update joins, leaves, and readies
 
 7 Sep 2022
 
