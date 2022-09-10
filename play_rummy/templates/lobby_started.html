@@ -66,6 +66,7 @@
     <span class="badge badge-full">Your hand</span>
     {{ display_cards(lobby.hand_for(session_id)) }}
     {% include "svg/card.svg" %}
+    {% if session_player.index == lobby.game.mover %}
     <div class="flex">
         <form method="POST" action="{{ url_for('post_lobby_act', lobby_id=lobby_id)}}">
             <input type="hidden" name="action_sort" value="pick_up">
@@ -77,6 +78,7 @@
             <button name="action_sort" value="discard">Discard</button>
         </form>
     </div>
+    {% endif %}
     <input type="hidden" id="num_actions" value="{{ lobby.game.num_actions }}">
     <input type="hidden" id="game_state" value="{{ lobby.game.state }}">
     <input type="hidden" id="game_state_query_uri" value="{{ url_for('get_lobby_game_state', lobby_id=lobby_id)}}">
