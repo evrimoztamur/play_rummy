@@ -7,6 +7,7 @@ Implement further game rules
 Polishing
     Better display for turn list on game end
     Kinder error messages for failed actions (message queue?)
+    Deselecting card checkboxes
 
 10 Sep 2022
 
