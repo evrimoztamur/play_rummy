@@ -167,7 +167,6 @@ class Card:
 
     @property
     def display_tuple(self):
-        print(self.suit, self.rank)
         return (CARD_SUIT_NAMES[self.suit], CARD_RANKS[self.rank])
 
     def __str__(self) -> str:

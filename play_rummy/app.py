@@ -47,6 +47,12 @@ class Lobby:
     def max_players(self):
         return len(self.game.hands)
 
+    @property
+    def all_players_ready(self):
+        return len(self.players) == self.max_players and all(
+            player.ready for player in self.players.values()
+        )
+
     def hand_for(self, session_id):
         player = self.players.get(session_id)
 
@@ -58,14 +64,34 @@ class Lobby:
     def join_player(self, session_id) -> str:
         player = self.players.get(session_id)
 
+        if self.game.started or self.game.ended:
+            raise InvalidQuery("cannot join an active game")
+
         if player:
             raise InvalidQuery("already in lobby")
         else:
             self.players[session_id] = Player(self.player_slots.pop(0))
             return session_id
 
+    def ready_player(self, session_id):
+        player = self.players.get(session_id)
+
+        if self.game.started or self.game.ended:
+            raise InvalidQuery("cannot ready for an active game")
+
+        if player:
+            player.ready = True
+
+            if self.all_players_ready:
+                self.game.start_game()
+        else:
+            raise InvalidQuery("cannot ready a player which is not in lobby")
+
     def leave_player(self, session_id):
         player = self.players.get(session_id)
+
+        if self.game.ended:
+            raise InvalidQuery("cannot leave a finished game")
 
         if player:
             self.player_slots.append(self.players[session_id].index)
@@ -76,28 +102,9 @@ class Lobby:
         else:
             raise InvalidQuery("player not in lobby")
 
-    @property
-    def all_players_ready(self):
-        return len(self.players) == self.max_players and all(
-            player.ready for player in self.players.values()
-        )
-
-    def ready_player(self, session_id):
-        player = self.players.get(session_id)
-
-        if player:
-            player.ready = True
-
-            if self.all_players_ready:
-                self.game.start_game()
-        else:
-            raise InvalidQuery("cannot ready a player which is not in lobby")
-
     def index_selected_cards_in_hand(self, form):
         hand = [card.card_id for card in self.game.hands[self.game.mover]]
         card_ids = [int(card_id) for card_id in form.getlist("selected_card_id")]
-
-        print(hand, card_ids)
 
         if set(card_ids) <= set(hand):
             return [hand.index(card_id) for card_id in card_ids]
@@ -292,10 +299,7 @@ def get_lobby_game_state(lobby_id):
     session_found, _ = identify_player()
 
     if lobby is not None and session_found:
-        return {
-            "num_actions": lobby.game.num_actions,
-            "state": lobby.game.state
-        }
+        return {"num_actions": lobby.game.num_actions, "state": lobby.game.state}
     else:
         return "<p>Lobby not found</p>"
 
