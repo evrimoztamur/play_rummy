@@ -3,9 +3,16 @@ TODO
 Implement further game rules
     Layoffs (discard to table meld)
     Joker swapping
+    Rules for when you have 1-2 cards at hand
 
 Create online multiplayer platform
     Add polling for prepared lobby (i.e. refresh for ready state changes and start game)
+
+Polishing
+    Hide finished lobbies
+    Better display for turn list on game end
+    Kinder error messages for failed actions (message queue?)
+    Distinguish 6 and 9 (dash on bottom?)
 
 10 Sep 2022
 
