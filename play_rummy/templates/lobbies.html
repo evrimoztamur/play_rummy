@@ -16,7 +16,15 @@
     <h4><a href="{{ url_for('get_index') }}">Play Rummy!</a></h4>
     <h3>Lobbies</h3>
     {% for lobby_id, lobby in lobbies.items() %}
-    <p>{% if lobby.players.get(session_id) is not none %}&plus;{% else %}&minus;{% endif %} <a href="{{ url_for('get_lobby', lobby_id=lobby_id) }}">Lobby #{{ lobby_id }}</a></p>
+    <p>
+        {% if lobby.players.get(session_id) is not none %}&plus;{% else %}&minus;{% endif %}
+        <a href="{{ url_for('get_lobby', lobby_id=lobby_id) }}">Lobby #{{ lobby_id }}</a>
+        {% if lobby.game.started %}
+        <span class="badge">In progress</span>
+        {% elif lobby.game.ended %}
+        <span class="badge">Finished</span>
+        {% endif %}
+    </p>
     {% endfor %}
     <div class="flex">
         <form method="POST" action="{{ url_for('post_lobby_create')}}">
