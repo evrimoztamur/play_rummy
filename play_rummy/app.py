@@ -1,17 +1,10 @@
 from base64 import b32encode
 from os import urandom
-import random
 from time import time
-from flask import Flask, redirect, url_for, render_template, request
-from play_rummy.game import (
-    Action,
-    DiscardAction,
-    Game,
-    MeldAction,
-    PickUpAction,
-    PickUpTarget,
-)
-from tests.replays import TEST_REPLAYS
+
+from flask import Flask, redirect, render_template, request, url_for
+
+from play_rummy.game import DiscardAction, Game, MeldAction, PickUpAction, PickUpTarget
 
 app = Flask(__name__)
 

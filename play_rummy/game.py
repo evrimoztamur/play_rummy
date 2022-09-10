@@ -1,6 +1,6 @@
-from enum import Enum
 import random
 import sys
+from enum import Enum
 
 
 def eprint(message):
