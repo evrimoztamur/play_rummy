@@ -12,13 +12,14 @@ Polishing
     Better display for turn list on game end
     Kinder error messages for failed actions (message queue?)
     Distinguish 6 and 9 (dash on bottom?)
-    Disable action buttons when it's not your turn
 
 10 Sep 2022
 
 Implement polling and action inputs for all supported ones
 Decided on polling as the necessary state changes are not heavy and it shouldn't bring a heavy load on the server to continue over HTTP (or HTTP/3)
 Skip turn on pickup with 1 card at hand
+Disable action buttons when it's not your turn
+Fix game not ending on discarding last card
 
 7 Sep 2022
 
