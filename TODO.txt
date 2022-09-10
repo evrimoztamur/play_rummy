@@ -5,15 +5,22 @@ Implement further game rules
     Joker swapping
 
 Create online multiplayer platform
-    Ready state to start game
-    Poll game state
-    Validated action requests
-    Server-push game state upon update, polling or WebSockets?
+    Add polling for prepared lobby (i.e. refresh for ready state changes and start game)
+
+10 Sep 2022
+
+Implement polling and action inputs for all supported ones
+Decided on polling as the necessary state changes are not heavy and it shouldn't bring a heavy load on the server to continue over HTTP (or HTTP/3)
 
 7 Sep 2022
 
 Implement sessions and game lobbies with join/leave/ready
 Implement card display from SVG icons into HTML card node
+Implement ready states starting the game up
+Add test lobby
+Record scores on game end
+Design and implement full game state display
+Implement selectable cards
 
 6 Sep 2022
 

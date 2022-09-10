@@ -3,7 +3,14 @@ from os import urandom
 import random
 from time import time
 from flask import Flask, redirect, url_for, render_template, request
-from play_rummy.game import Game
+from play_rummy.game import (
+    Action,
+    DiscardAction,
+    Game,
+    MeldAction,
+    PickUpAction,
+    PickUpTarget,
+)
 from tests.replays import TEST_REPLAYS
 
 app = Flask(__name__)
@@ -83,6 +90,63 @@ class Lobby:
 
             if self.all_players_ready:
                 self.game.start_game()
+        else:
+            raise InvalidQuery("cannot ready a player which is not in lobby")
+
+    def index_selected_cards_in_hand(self, form):
+        hand = [card.card_id for card in self.game.hands[self.game.mover]]
+        card_ids = [int(card_id) for card_id in form.getlist("selected_card_id")]
+
+        print(hand, card_ids)
+
+        if set(card_ids) <= set(hand):
+            return [hand.index(card_id) for card_id in card_ids]
+        else:
+            raise InvalidQuery("hand does not contain all selected cards")
+
+    def interpret_action(self, form):
+        action_sort = form.get("action_sort")
+
+        action_sorts = {"pick_up", "meld", "discard"}
+        pick_up_targets = {"deck": PickUpTarget.DECK, "discard": PickUpTarget.DISCARD}
+
+        if action_sort in action_sorts:
+            if action_sort == "pick_up":
+                action_target = pick_up_targets.get(form.get("action_target"))
+
+                if action_target is not None:
+                    return PickUpAction(action_target)
+                else:
+                    return InvalidQuery(
+                        "pick-up action target is not provided or unknown"
+                    )
+            elif action_sort == "meld":
+                card_indices = self.index_selected_cards_in_hand(form)
+
+                if len(card_indices) > 0:
+                    return MeldAction(card_indices)
+                else:
+                    return InvalidQuery("must select cards for a meld")
+            elif action_sort == "discard":
+                card_indices = self.index_selected_cards_in_hand(form)
+
+                if len(card_indices) == 1:
+                    return DiscardAction(card_indices[0])
+                else:
+                    return InvalidQuery("can only discard one card per turn")
+        else:
+            return InvalidQuery("action sort is not provided or unknown")
+
+    def act_player(self, session_id, form):
+        player = self.players.get(session_id)
+
+        if player and self.game.started:
+            if player.index == self.game.mover:
+                action = self.interpret_action(form)
+
+                self.game.make_action(action)
+            else:
+                raise InvalidQuery("not your turn")
         else:
             raise InvalidQuery("cannot ready a player which is not in lobby")
 
@@ -205,6 +269,33 @@ def post_lobby_ready(lobby_id):
         lobby.ready_player(session_id)
 
         return redirect(url_for("get_lobby", lobby_id=lobby_id))
+    else:
+        return "<p>Lobby not found</p>"
+
+
+@app.post("/lobby/<lobby_id>/act")
+def post_lobby_act(lobby_id):
+    lobby = lobbies.get(lobby_id)
+    session_found, session_id = identify_player()
+
+    if lobby is not None and session_found:
+        lobby.act_player(session_id, request.form)
+
+        return redirect(url_for("get_lobby", lobby_id=lobby_id))
+    else:
+        return "<p>Lobby not found</p>"
+
+
+@app.get("/lobby/<lobby_id>/game_state")
+def get_lobby_game_state(lobby_id):
+    lobby = lobbies.get(lobby_id)
+    session_found, _ = identify_player()
+
+    if lobby is not None and session_found:
+        return {
+            "num_actions": lobby.game.num_actions,
+            "state": lobby.game.state
+        }
     else:
         return "<p>Lobby not found</p>"
 

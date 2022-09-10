@@ -286,7 +286,7 @@ class MeldAction(Action):
 
         if self.meld_data and not has_melds and not meld_above_threshold:
             raise IllegalAction(
-                f"first meld score not high enough (${self.meld_data.score} < ${Game.MELD_THRESHOLD}"
+                f"first meld score not high enough (${self.meld_data.score} < ${Game.MELD_THRESHOLD})"
             )
 
     def execute(self, game):
@@ -355,6 +355,10 @@ class Game:
     def mover(self):
         return (len(self.turns) - 1) % len(self.hands)
 
+    @property
+    def num_actions(self):
+        return sum(len(turn) for turn in self.turns)
+
     def shuffle_cards(self):
         random.shuffle(self.cards)
 
@@ -405,9 +409,7 @@ class Game:
         for player, hand in enumerate(self.hands):
             score = Game.score_cards(hand)
             opened = len(self.melds[player]) > 0
-            tournament_score = Game.tournament_score(
-                score, opened
-            )
+            tournament_score = Game.tournament_score(score, opened)
             self.scores[player] = (score, tournament_score, opened)
 
         self.state = GameState.ENDED

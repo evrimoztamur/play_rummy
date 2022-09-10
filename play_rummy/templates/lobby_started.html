@@ -67,13 +67,41 @@
     {{ display_cards(lobby.hand_for(session_id)) }}
     {% include "svg/card.svg" %}
     <div class="flex">
-        <form method="POST" action="{{ url_for('post_lobby_leave', lobby_id=lobby_id)}}"><button>Pick-up
-                <strong>Deck</strong></button></form>
-        <form method="POST" action="{{ url_for('post_lobby_leave', lobby_id=lobby_id)}}"><button>Pick-up
-                <strong>Discard</strong></button></form>
-        <form method="POST" action="{{ url_for('post_lobby_leave', lobby_id=lobby_id)}}"><button>Meld</button></form>
-        <form method="POST" action="{{ url_for('post_lobby_leave', lobby_id=lobby_id)}}"><button>Discard</button></form>
+        <form method="POST" action="{{ url_for('post_lobby_act', lobby_id=lobby_id)}}">
+            <input type="hidden" name="action_sort" value="pick_up">
+            <button name="action_target" value="deck">Pick-up <strong>Deck</strong></button>
+            <button name="action_target" value="discard">Pick-up <strong>Discard</strong></button>
+        </form>
+        <form id="card-action" method="POST" action="{{ url_for('post_lobby_act', lobby_id=lobby_id)}}">
+            <button name="action_sort" value="meld">Meld</button>
+            <button name="action_sort" value="discard">Discard</button>
+        </form>
     </div>
+    <input type="hidden" id="num_actions" value="{{ lobby.game.num_actions }}">
+    <input type="hidden" id="game_state" value="{{ lobby.game.state }}">
+    <input type="hidden" id="game_state_query_uri" value="{{ url_for('get_lobby_game_state', lobby_id=lobby_id)}}">
+    <script>
+        let numActionsEl = document.getElementById("num_actions");
+        let numActions = numActionsEl.value | 0;
+
+        let stateEl = document.getElementById("game_state");
+        let state = stateEl.value | 0;
+
+        let gsquEl = document.getElementById("game_state_query_uri");
+        let gsqu = gsquEl.value;
+
+        let timer = setInterval(() => {
+            fetch(gsqu)
+                .then((response) => response.json())
+                .then((data) => compareGameState(data));
+        }, 1000);
+
+        function compareGameState(gameState) {
+            if (gameState.num_actions != numActions || gameState.state != state) {
+                location.reload();
+            }
+        }
+    </script>
 </body>
 
 </html>
