@@ -387,6 +387,9 @@ class Game:
 
         self.turns[-1].append(action)
 
+        if not self.hands[self.mover]:
+            self.end_game()
+
         skip_by_discard = isinstance(action, DiscardAction)
         skip_by_pickup = (
             isinstance(action, PickUpAction) and len(self.hands[self.mover]) == 2
@@ -394,9 +397,6 @@ class Game:
 
         if skip_by_discard or skip_by_pickup:
             self.turns.append([])
-
-        if not self.hands[self.mover]:
-            self.end_game()
 
     def start_game(self):
         self.shuffle_cards()
