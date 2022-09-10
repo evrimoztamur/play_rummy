@@ -33,9 +33,6 @@
                     class="ms-hrem">&check;</strong>{% endif %}</span></div>
         {% endif %}
     </div>
-    {% if not lobby.all_ready %}
-    <h4>Ended without finishing</h4>
-    {% endif %}
     <h4>Players</h4>
     <ol>
         {% for hand in lobby.game.hands %}
