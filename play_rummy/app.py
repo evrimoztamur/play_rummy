@@ -185,30 +185,6 @@ def post_lobby_create():
     return post_lobby_join(lobby_id)
 
 
-@app.post("/lobby/create/test")
-def post_lobby_create_test():
-    lobby_id = make_token()
-
-    random.seed(1)
-
-    game = Game(4)
-    game.start_game()
-
-    for action in TEST_REPLAYS[0][2][:-10]:
-        try:
-            game.make_action(action)
-        except:
-            pass
-
-    lobbies[lobby_id] = Lobby(game)
-
-    lobbies[lobby_id].join_player("a")
-    lobbies[lobby_id].join_player("b")
-    lobbies[lobby_id].join_player("c")
-
-    return post_lobby_join(lobby_id)
-
-
 @app.get("/lobby/<lobby_id>")
 def get_lobby(lobby_id):
     lobby: Lobby = lobbies.get(lobby_id)
