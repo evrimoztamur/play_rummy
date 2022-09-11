@@ -102,6 +102,7 @@ div.card {
     margin: .5rem;
     margin-right: -3rem;
     cursor: default;
+    overflow: hidden;
 }
 
 div.card svg.icon-suit,
