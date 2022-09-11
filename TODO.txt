@@ -6,8 +6,12 @@ Implement further game rules
 
 Polishing
     Better display for turn list on game end
-    Kinder error messages for failed actions (message queue?)
-    Deselecting card checkboxes
+
+11 Sep 2022
+
+Deselecting card checkboxes
+Add form to set lobby parameters before creation (player count and meld threshold)
+Kinder error messages for failed actions using Flask flashes
 
 10 Sep 2022
 

@@ -13,7 +13,7 @@
 </head>
 
 <body>
-    {% from 'macros.html' import display_cards with context  %}
+    {% from 'macros.html' import display_cards, display_errors with context  %}
     {% set session_player = lobby.players.get(session_id) %}
     <h4><a href="{{ url_for('get_index') }}">Play Rummy!</a></h4>
     <h3>Lobby <strong>#{{ lobby_id }}</strong></h3>
@@ -66,6 +66,7 @@
     <span class="badge badge-full">Your hand</span>
     {{ display_cards(lobby.hand_for(session_id)) }}
     {% include "svg/card.svg" %}
+    {{ display_errors() }}
     {% if session_player.index == lobby.game.mover %}
     <div class="flex">
         <form method="POST" action="{{ url_for('post_lobby_act', lobby_id=lobby_id)}}">

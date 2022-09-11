@@ -4,7 +4,8 @@
     {% set display_tuple = card.display_tuple %}
     {% set suit = "suit-" + display_tuple[0] %}
     {% set rank = "rank-" + display_tuple[1] %}
-    <input form="card-action" type="checkbox" id="selected_card_id[{{ card.card_id }}]" name="selected_card_id" value="{{ card.card_id }}" autocomplete="off">
+    <input form="card-action" type="checkbox" id="selected_card_id[{{ card.card_id }}]" name="selected_card_id"
+        value="{{ card.card_id }}" autocomplete="off">
     <label for="selected_card_id[{{ card.card_id }}]">
         <div class="card {{ suit }} {{ rank }}">
             {{ svg_icon(suit, "suit")|safe }}
@@ -17,4 +18,15 @@
     <div class="card card-label">&times;</div>
     {% endfor %}
 </div>
+{%- endmacro %}
+{% macro display_errors() -%}
+{% with messages = get_flashed_messages(with_categories=true, category_filter=["error"]) %}
+{% if messages %}
+<ul class="flashes">
+    {% for category, message in messages %}
+    <li class="flash-{{ category }}"><strong>Trouble</strong> {{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endwith %}
 {%- endmacro %}

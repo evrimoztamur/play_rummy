@@ -13,8 +13,10 @@
 </head>
 
 <body>
+    {% from 'macros.html' import display_errors %}
     <h4><a href="{{ url_for('get_index') }}">Play Rummy!</a></h4>
     <h3>New lobby</h3>
+    {{ display_errors() }}
     <div class="flex">
         <form method="POST" action="{{ url_for('post_lobby_create', lobby_id=lobby_id)}}">
             <div class="form-block">

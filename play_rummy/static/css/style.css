@@ -221,3 +221,12 @@ div.form-block label {
 div.form-block input {
     flex: 0 0 5rem;
 }
+
+ul.flashes {
+    padding: 0;
+}
+
+ul.flashes li.flash-error {
+    list-style: none;
+    color: #c83737;
+}

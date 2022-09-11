@@ -2,12 +2,13 @@ from base64 import b32encode
 from os import urandom
 from time import time
 
-from flask import Flask, redirect, render_template, request, url_for
-from play_rummy.exceptions import InvalidQuery
+from flask import Flask, flash, redirect, render_template, request, url_for
+from play_rummy.exceptions import IllegalAction, InvalidQuery
 
 from play_rummy.game import DiscardAction, Game, MeldAction, PickUpAction, PickUpTarget
 
 app = Flask(__name__)
+app.secret_key = "1"
 
 
 def make_token(nbytes=4):
@@ -15,6 +16,18 @@ def make_token(nbytes=4):
     timestamp = int(time()).to_bytes(4, byteorder="big")
 
     return b32encode(timestamp + tok).rstrip(b"=").decode("ascii").lower()
+
+
+@app.errorhandler(InvalidQuery)
+def handle_invalid_query(e):
+    flash(str(e), "error")
+    return redirect(request.referrer)
+
+
+@app.errorhandler(IllegalAction)
+def handle_invalid_query(e):
+    flash(str(e), "error")
+    return redirect(request.referrer)
 
 
 class Player:
