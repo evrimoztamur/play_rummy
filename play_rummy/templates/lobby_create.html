@@ -14,21 +14,18 @@
 
 <body>
     <h4><a href="{{ url_for('get_index') }}">Play Rummy!</a></h4>
-    <h3>Lobbies</h3>
-    {% for lobby_id, lobby in lobbies.items() %}
-    <p>
-        {% if lobby.players.get(session_id) is not none %}&plus;{% else %}&minus;{% endif %}
-        <a href="{{ url_for('get_lobby', lobby_id=lobby_id) }}">Lobby #{{ lobby_id }}</a>
-        {% if lobby.game.started %}
-        <span class="badge">In progress</span>
-        {% elif lobby.game.ended %}
-        <span class="badge">Finished</span>
-        {% endif %}
-    </p>
-    {% endfor %}
+    <h3>New lobby</h3>
     <div class="flex">
-        <form method="GET" action="{{ url_for('get_lobby_create')}}">
-            <button class="button-action">New lobby</button>
+        <form method="POST" action="{{ url_for('post_lobby_create', lobby_id=lobby_id)}}">
+            <div class="form-block">
+                <label>Players<br><small>2-6 players</small></label>
+                <input name="num_players" type="text" pattern="[23456]" value="4">
+            </div>
+            <div class="form-block">
+                <label>First meld threshold<br><small>0-40 points</small></label>
+                <input name="meld_threshold" type="text" pattern="[0-9]+" value="40">
+            </div>
+            <button class="button-action">Create new lobby</button>
         </form>
     </div>
 </body>

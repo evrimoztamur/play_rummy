@@ -3,6 +3,7 @@ from os import urandom
 from time import time
 
 from flask import Flask, redirect, render_template, request, url_for
+from play_rummy.exceptions import InvalidQuery
 
 from play_rummy.game import DiscardAction, Game, MeldAction, PickUpAction, PickUpTarget
 
@@ -14,10 +15,6 @@ def make_token(nbytes=4):
     timestamp = int(time()).to_bytes(4, byteorder="big")
 
     return b32encode(timestamp + tok).rstrip(b"=").decode("ascii").lower()
-
-
-class InvalidQuery(Exception):
-    pass
 
 
 class Player:
@@ -180,12 +177,23 @@ def get_index():
     return render_template("lobbies.html", lobbies=lobbies, session_id=session_id)
 
 
+@app.get("/lobby/create")
+def get_lobby_create():
+    return render_template("lobby_create.html")
+
+
 @app.post("/lobby/create")
 def post_lobby_create():
-    lobby_id = make_token()
-    lobbies[lobby_id] = Lobby(Game(2))
+    num_players = request.form.get("num_players")
+    meld_threshold = request.form.get("meld_threshold")
 
-    return post_lobby_join(lobby_id)
+    if num_players and meld_threshold:
+        lobby_id = make_token()
+        lobbies[lobby_id] = Lobby(Game(int(num_players), int(meld_threshold)))
+
+        return post_lobby_join(lobby_id)
+    else:
+        raise InvalidQuery("did not include number of players or meld threshold")
 
 
 @app.get("/lobby/<lobby_id>")

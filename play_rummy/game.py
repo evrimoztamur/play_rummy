@@ -2,6 +2,9 @@ import random
 import sys
 from enum import Enum
 
+from play_rummy.app import InvalidQuery
+from play_rummy.exceptions import IllegalAction, InvalidMeld
+
 
 def eprint(message):
     print(f"\x1b[1;31m{message}\x1b[0m", file=sys.stderr)
@@ -55,14 +58,6 @@ class RunData(MeldData):
 
     def __repr__(self) -> str:
         return str(self)
-
-
-class InvalidMeld(Exception):
-    pass
-
-
-class IllegalAction(Exception):
-    pass
 
 
 class Card:
@@ -281,11 +276,11 @@ class MeldAction(Action):
             raise IllegalAction("no valid meld for selected cards")
 
         has_melds = len(game.melds[game.mover]) > 0
-        meld_above_threshold = self.meld_data.score >= Game.MELD_THRESHOLD
+        meld_above_threshold = self.meld_data.score >= game.meld_threshold
 
         if self.meld_data and not has_melds and not meld_above_threshold:
             raise IllegalAction(
-                f"first meld score not high enough (${self.meld_data.score} < ${Game.MELD_THRESHOLD})"
+                f"first meld score not high enough (${self.meld_data.score} < ${game.meld_threshold})"
             )
 
     def execute(self, game):
@@ -332,8 +327,19 @@ class GameState:
 
 class Game:
     MELD_THRESHOLD = 40
+    PLAYER_LIMITS = (2, 6)
+    THRESHOLD_LIMITS = (0, 40)
 
-    def __init__(self, num_players) -> None:
+    def __init__(self, num_players, meld_threshold=MELD_THRESHOLD) -> None:
+        if not Game.PLAYER_LIMITS[0] <= num_players <= Game.PLAYER_LIMITS[1]:
+            raise InvalidQuery(
+                "number of players not within limits ({Game.PLAYER_LIMITS[0]} to {Game.PLAYER_LIMITS[1]})"
+            )
+        if not Game.THRESHOLD_LIMITS[0] <= meld_threshold <= Game.THRESHOLD_LIMITS[1]:
+            raise InvalidQuery(
+                "meld threshold not within limits ({Game.THRESHOLD_LIMITS[0]} to {Game.THRESHOLD_LIMITS[1]})"
+            )
+
         self.cards = [Card(card_id) for card_id in range(NUM_CARDS)]
         self.hands = [[] for _ in range(num_players)]
         self.melds = [[] for _ in range(num_players)]
@@ -341,6 +347,7 @@ class Game:
         self.turns = [[]]
         self.state = GameState.PREPARED
         self.scores = [(0, 0) for _ in range(num_players)]
+        self.meld_threshold = meld_threshold
 
     @property
     def started(self):

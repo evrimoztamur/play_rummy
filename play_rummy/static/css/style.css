@@ -125,6 +125,17 @@ div.card.card-label {
     color: #0b1728;
 }
 
+input {
+    appearance: none;
+    border: none;
+    border-radius: .125rem;
+    padding: .125rem .25rem;
+    margin: .125rem;
+    border: 1px solid #0003;
+    width: auto;
+    min-width: 0;
+}
+
 input[name="selected_card_id"] {
     display: none;
 }
@@ -190,4 +201,23 @@ ol {
 
 ol li {
     margin-bottom: .25rem;
+}
+
+form {
+    flex-grow: 1;
+}
+
+div.form-block {
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    margin-bottom: .5rem;
+}
+
+div.form-block label {
+    flex: 0 0 10rem;
+}
+
+div.form-block input {
+    flex: 0 0 5rem;
 }
