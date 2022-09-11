@@ -333,11 +333,11 @@ class Game:
     def __init__(self, num_players, meld_threshold=MELD_THRESHOLD) -> None:
         if not Game.PLAYER_LIMITS[0] <= num_players <= Game.PLAYER_LIMITS[1]:
             raise InvalidQuery(
-                "number of players not within limits ({Game.PLAYER_LIMITS[0]} to {Game.PLAYER_LIMITS[1]})"
+                f"number of players not within limits ({Game.PLAYER_LIMITS[0]} to {Game.PLAYER_LIMITS[1]})"
             )
         if not Game.THRESHOLD_LIMITS[0] <= meld_threshold <= Game.THRESHOLD_LIMITS[1]:
             raise InvalidQuery(
-                "meld threshold not within limits ({Game.THRESHOLD_LIMITS[0]} to {Game.THRESHOLD_LIMITS[1]})"
+                f"meld threshold not within limits ({Game.THRESHOLD_LIMITS[0]} to {Game.THRESHOLD_LIMITS[1]})"
             )
 
         self.cards = [Card(card_id) for card_id in range(NUM_CARDS)]
