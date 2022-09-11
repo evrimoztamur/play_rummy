@@ -4,7 +4,7 @@
     {% set display_tuple = card.display_tuple %}
     {% set suit = "suit-" + display_tuple[0] %}
     {% set rank = "rank-" + display_tuple[1] %}
-    <input form="card-action" type="checkbox" id="selected_card_id[{{ card.card_id }}]" name="selected_card_id" value="{{ card.card_id }}">
+    <input form="card-action" type="checkbox" id="selected_card_id[{{ card.card_id }}]" name="selected_card_id" value="{{ card.card_id }}" autocomplete="off">
     <label for="selected_card_id[{{ card.card_id }}]">
         <div class="card {{ suit }} {{ rank }}">
             {{ svg_icon(suit, "suit")|safe }}
