@@ -25,7 +25,7 @@ def handle_invalid_query(e):
 
 
 @app.errorhandler(IllegalAction)
-def handle_invalid_query(e):
+def handle_illegal_action(e):
     flash(str(e), "error")
     return redirect(request.referrer)
 
@@ -228,7 +228,7 @@ def get_lobby(lobby_id):
         else:
             return render_template("lobby_prepared.html", **context)
     else:
-        return "<p>Lobby not available</p>"
+        raise InvalidQuery("lobby not available")
 
 
 @app.post("/lobby/<lobby_id>/join")
@@ -244,9 +244,9 @@ def post_lobby_join(lobby_id):
                 response.set_cookie("session_id", session_id)
             return response
         else:
-            return "<p>Lobby is full!</p>"
+            raise InvalidQuery("lobby is full")
     else:
-        return "<p>Lobby not available!</p>"
+        raise InvalidQuery("lobby not available")
 
 
 @app.post("/lobby/<lobby_id>/leave")
@@ -264,7 +264,7 @@ def post_lobby_leave(lobby_id):
         else:
             return redirect(url_for("get_lobby", lobby_id=lobby_id))
     else:
-        return "<p>Lobby not available</p>"
+        raise InvalidQuery("lobby not available")
 
 
 @app.post("/lobby/<lobby_id>/ready")
@@ -277,7 +277,7 @@ def post_lobby_ready(lobby_id):
 
         return redirect(url_for("get_lobby", lobby_id=lobby_id))
     else:
-        return "<p>Lobby not available</p>"
+        raise InvalidQuery("lobby not available")
 
 
 @app.post("/lobby/<lobby_id>/act")
@@ -290,7 +290,7 @@ def post_lobby_act(lobby_id):
 
         return redirect(url_for("get_lobby", lobby_id=lobby_id))
     else:
-        return "<p>Lobby not available</p>"
+        raise InvalidQuery("lobby not available")
 
 
 @app.get("/lobby/<lobby_id>/state")
@@ -301,7 +301,7 @@ def get_lobby_state(lobby_id):
     if lobby is not None and session_found:
         return {"ticks": lobby.ticks}
     else:
-        return "<p>Lobby not available</p>"
+        raise InvalidQuery("lobby not available")
 
 
 @app.get("/lobby/<lobby_id>/game_state")
@@ -312,7 +312,7 @@ def get_lobby_game_state(lobby_id):
     if lobby is not None and session_found:
         return {"num_actions": lobby.game.num_actions, "state": lobby.game.state}
     else:
-        return "<p>Lobby not available</p>"
+        raise InvalidQuery("lobby not available")
 
 
 @app.context_processor
