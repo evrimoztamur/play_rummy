@@ -1,7 +1,6 @@
 import random
 import sys
 from enum import Enum
-import itertools
 
 from play_rummy.exceptions import IllegalAction, InvalidMeld, GameError
 
@@ -335,7 +334,7 @@ class SwapAction(Action):
 
     def validate(self, game):
         self.control(game)
-        
+
         if len(self.cards) != 2:
             raise GameError("must select two cards to swap")
 
