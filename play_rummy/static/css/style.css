@@ -25,6 +25,11 @@ button {
     border: 1px solid #0003;
 }
 
+button[disabled] {
+    background-color: white;
+    cursor: default;
+}
+
 button.button-action {
     background-color: lightseagreen;
     color: azure;
@@ -229,4 +234,9 @@ ul.flashes {
 ul.flashes li.flash-error {
     list-style: none;
     color: #c83737;
+}
+
+#card-action {
+    display: flex;
+    justify-content: end;
 }

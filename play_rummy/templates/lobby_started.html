@@ -71,14 +71,14 @@
     <div class="flex">
         <form method="POST" action="{{ url_for('post_lobby_act', lobby_id=lobby_id)}}">
             <input type="hidden" name="action_sort" value="pick_up">
-            <button name="action_target" value="deck">Pick-up <strong>Deck</strong></button>
-            <button name="action_target" value="discard">Pick-up <strong>Discard</strong></button>
+            <button name="action_target" value="deck" {% if not control_actions.pick_up_deck %}disabled{% endif %}>Pick-up <strong>Deck</strong></button>
+            <button name="action_target" value="discard" {% if not control_actions.pick_up_discard %}disabled{% endif %}>Pick-up <strong>Discard</strong></button>
         </form>
         <form id="card-action" method="POST" action="{{ url_for('post_lobby_act', lobby_id=lobby_id)}}">
-            <button name="action_sort" value="meld">Meld</button>
-            <button name="action_sort" value="swap">Swap</button>
-            <button name="action_sort" value="lay_off">Lay-off</button>
-            <button name="action_sort" value="discard">Discard</button>
+            <button name="action_sort" value="meld" {% if not control_actions.meld %}disabled{% endif %}>Meld</button>
+            <button name="action_sort" value="swap" {% if not control_actions.swap %}disabled{% endif %}>Swap</button>
+            <button name="action_sort" value="lay_off" {% if not control_actions.lay_off %}disabled{% endif %}>Lay-off</button>
+            <button name="action_sort" value="discard" {% if not control_actions.discard %}disabled{% endif %}>Discard</button>
         </form>
     </div>
     {% endif %}

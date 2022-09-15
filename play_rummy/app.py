@@ -139,6 +139,25 @@ class Lobby:
     def selected_cards(form):
         return [Card(int(card_id)) for card_id in form.getlist("selected_card_id")]
 
+    def control_action(self, action):
+        try:
+            action.control(self.game)
+            return True
+        except IllegalAction:
+            return False
+        except GameError:
+            return False
+
+    def control_actions(self):
+        return {
+            "pick_up_deck": self.control_action(PickUpAction(PickUpTarget.DECK)),
+            "pick_up_discard": self.control_action(PickUpAction(PickUpTarget.DISCARD)),
+            "meld": self.control_action(MeldAction(None)),
+            "discard": self.control_action(DiscardAction(None)),
+            "swap": self.control_action(SwapAction(None)),
+            "lay_off": self.control_action(LayOffAction(None)),
+        }
+
     def interpret_action(self, form):
         action_sort = form.get("action_sort")
 
@@ -152,9 +171,7 @@ class Lobby:
                 if action_target is not None:
                     return PickUpAction(action_target)
                 else:
-                    raise GameError(
-                        "pick-up action target is not provided or unknown"
-                    )
+                    raise GameError("pick-up action target is not provided or unknown")
             elif action_sort == "meld":
                 cards = Lobby.selected_cards(form)
 
@@ -253,6 +270,7 @@ def get_lobby(lobby_id):
         }
 
         if lobby.game.started:
+            context |= {"control_actions": lobby.control_actions()}
             return render_template("lobby_started.html", **context)
         elif lobby.game.ended:
             return render_template("lobby_ended.html", **context)

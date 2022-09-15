@@ -203,6 +203,9 @@ class ActionSort(Enum):
 
 
 class Action:
+    def control(self, game):
+        return True
+
     def validate(self, game):
         return NotImplemented
 
@@ -219,7 +222,7 @@ class PickUpAction(Action):
     def __init__(self, target: PickUpTarget) -> None:
         self.target = target
 
-    def validate(self, game):
+    def control(self, game):
         turn = game.turns[-1]
 
         if Game.turn_contains(turn, PickUpAction):
@@ -228,6 +231,9 @@ class PickUpAction(Action):
             raise IllegalAction("invalid pick up target")
         elif self.target == PickUpTarget.DISCARD and len(game.turns) <= 1:
             raise IllegalAction("cannot pick up from discard pile on first turn")
+
+    def validate(self, game):
+        self.control(game)
 
     def execute(self, game):
         self.validate(game)
@@ -294,11 +300,14 @@ class DiscardAction(Action):
     def __str__(self) -> str:
         return f"<Action Discard {self.card}>"
 
-    def validate(self, game):
+    def control(self, game):
         turn = game.turns[-1]
 
         if not Game.turn_contains(turn, PickUpAction):
             raise IllegalAction("did not pick up a card")
+
+    def validate(self, game):
+        self.control(game)
 
         try:
             self.card_index = game.hands[game.mover].index(self.card)
@@ -320,10 +329,13 @@ class SwapAction(Action):
     def __str__(self) -> str:
         return f"<Action Swap {self.cards}>"
 
-    def validate(self, game):
+    def control(self, game):
         if len(game.melds[game.mover]) == 0:
             raise GameError("you must open your first meld to swap")
 
+    def validate(self, game):
+        self.control(game)
+        
         if len(self.cards) != 2:
             raise GameError("must select two cards to swap")
 
@@ -380,9 +392,12 @@ class LayOffAction(Action):
     def __str__(self) -> str:
         return f"<Action Swap {self.cards}>"
 
-    def validate(self, game):
+    def control(self, game):
         if len(game.melds[game.mover]) == 0:
             raise GameError("you must open your first meld to lay off")
+
+    def validate(self, game):
+        self.control(game)
 
         if len(self.cards) != 2:
             raise GameError(
