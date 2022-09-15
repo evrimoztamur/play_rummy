@@ -2,8 +2,7 @@ import random
 import sys
 from enum import Enum
 
-from play_rummy.app import InvalidQuery
-from play_rummy.exceptions import IllegalAction, InvalidMeld
+from play_rummy.exceptions import IllegalAction, InvalidMeld, InvalidQuery
 
 
 def eprint(message):

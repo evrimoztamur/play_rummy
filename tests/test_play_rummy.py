@@ -1,15 +1,9 @@
 import random
+
 import pytest
 from play_rummy import __version__
-
-from play_rummy.game import (
-    Card,
-    Game,
-    IllegalAction,
-    InvalidMeld,
-    eprint,
-    sprint,
-)
+from play_rummy.exceptions import IllegalAction, InvalidMeld
+from play_rummy.game import Card, Game, eprint, sprint
 
 from tests.replays import TEST_REPLAYS
 from tests.runs import TEST_RUNS

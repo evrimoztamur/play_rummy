@@ -115,14 +115,9 @@ class Lobby:
         else:
             raise InvalidQuery("player not in lobby")
 
-    def index_selected_cards_in_hand(self, form):
-        hand = [card.card_id for card in self.game.hands[self.game.mover]]
-        card_ids = [int(card_id) for card_id in form.getlist("selected_card_id")]
-
-        if set(card_ids) <= set(hand):
-            return [hand.index(card_id) for card_id in card_ids]
-        else:
-            raise InvalidQuery("hand does not contain all selected cards")
+    @staticmethod
+    def selected_card_ids(form):
+        return [int(card_id) for card_id in form.getlist("selected_card_id")]
 
     def interpret_action(self, form):
         action_sort = form.get("action_sort")
@@ -141,17 +136,19 @@ class Lobby:
                         "pick-up action target is not provided or unknown"
                     )
             elif action_sort == "meld":
-                card_indices = self.index_selected_cards_in_hand(form)
+                card_ids = Lobby.selected_card_ids(form)
 
-                if len(card_indices) > 0:
-                    return MeldAction(card_indices)
+                if len(card_ids) > 0:
+                    return MeldAction(card_ids)
                 else:
                     raise InvalidQuery("must select cards for a meld")
             elif action_sort == "discard":
-                card_indices = self.index_selected_cards_in_hand(form)
+                card_ids = Lobby.selected_card_ids(form)
 
-                if len(card_indices) == 1:
-                    return DiscardAction(card_indices[0])
+                if len(card_ids) == 1:
+                    return DiscardAction(card_ids[0])
+                elif len(card_ids) == 0:
+                    raise InvalidQuery("must select a card to discard")
                 else:
                     raise InvalidQuery("can only discard one card per turn")
         else:
