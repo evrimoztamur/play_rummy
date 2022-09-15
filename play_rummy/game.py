@@ -372,6 +372,7 @@ class SwapAction(Action):
         game.melds[self.meld_location[0]][self.meld_location[1]] = self.new_meld
         game.hands[game.mover][self.hand_card_index] = self.meld_card
 
+
 class LayOffAction(Action):
     def __init__(self, cards) -> None:
         self.cards = cards
@@ -384,7 +385,9 @@ class LayOffAction(Action):
             raise InvalidQuery("you must open your first meld to lay off")
 
         if len(self.cards) != 2:
-            raise InvalidQuery("must select one card from your hand and one from the meld to lay off")
+            raise InvalidQuery(
+                "must select one card from your hand and one from the meld to lay off"
+            )
 
         if self.cards[0] in game.hands[game.mover]:
             self.hand_card = self.cards[0]
@@ -406,23 +409,16 @@ class LayOffAction(Action):
 
     def test_meld(self):
         if isinstance(self.meld, SetData):
-            self.new_meld = Game.validate_set(
-                [
-                    self.hand_card, *self.meld.cards
-                ]
-            )
+            self.new_meld = Game.validate_set([self.hand_card, *self.meld.cards])
         elif isinstance(self.meld, RunData):
-            self.new_meld = Game.discover_run(
-                [
-                    self.hand_card, *self.meld.cards
-                ]
-            )
+            self.new_meld = Game.discover_run([self.hand_card, *self.meld.cards])
 
     def execute(self, game):
         self.validate(game)
 
         game.melds[self.meld_location[0]][self.meld_location[1]] = self.new_meld
         game.hands[game.mover].pop(game.hands[game.mover].index(self.hand_card))
+
 
 class GameState:
     PREPARED = 0

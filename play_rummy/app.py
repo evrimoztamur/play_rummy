@@ -13,7 +13,7 @@ from play_rummy.game import (
     PickUpAction,
     PickUpTarget,
     SwapAction,
-    LayOffAction
+    LayOffAction,
 )
 
 app = Flask(__name__)
