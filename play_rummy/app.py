@@ -3,7 +3,7 @@ from os import urandom
 from time import time
 
 from flask import Flask, flash, redirect, render_template, request, url_for
-from play_rummy.exceptions import IllegalAction, InvalidMeld, InvalidQuery
+from play_rummy.exceptions import IllegalAction, InvalidMeld, InvalidQuery, LobbyError
 
 from play_rummy.game import (
     Card,
@@ -40,10 +40,14 @@ def handle_illegal_action(e):
 
 
 @app.errorhandler(InvalidMeld)
-def handle_illegal_action(e):
+def handle_invalid_meld(e):
     flash(str(e), "error")
     return redirect(request.referrer)
 
+
+@app.errorhandler(LobbyError)
+def handle_lobby_error(e):
+    return render_template("error.html", error=str(e)), 400
 
 class Player:
     def __init__(self, index) -> None:
@@ -81,16 +85,16 @@ class Lobby:
         if player:
             return self.game.hands[player.index]
         else:
-            raise InvalidQuery("player not in lobby")
+            raise LobbyError("player not in lobby")
 
     def join_player(self, session_id) -> str:
         player = self.players.get(session_id)
 
         if self.game.started or self.game.ended:
-            raise InvalidQuery("cannot join an active game")
+            raise LobbyError("cannot join an active game")
 
         if player:
-            raise InvalidQuery("already in lobby")
+            raise LobbyError("already in lobby")
         else:
             self.tick()
 
@@ -101,7 +105,7 @@ class Lobby:
         player = self.players.get(session_id)
 
         if self.game.started or self.game.ended:
-            raise InvalidQuery("cannot ready for an active game")
+            raise LobbyError("cannot ready for an active game")
 
         if player:
             self.tick()
@@ -111,13 +115,13 @@ class Lobby:
             if self.all_players_ready:
                 self.game.start_game()
         else:
-            raise InvalidQuery("cannot ready a player which is not in lobby")
+            raise LobbyError("cannot ready a player which is not in lobby")
 
     def leave_player(self, session_id):
         player = self.players.get(session_id)
 
         if self.game.ended:
-            raise InvalidQuery("cannot leave a finished game")
+            raise LobbyError("cannot leave a finished game")
 
         if player:
             self.tick()
@@ -128,7 +132,7 @@ class Lobby:
             if self.game.started:
                 self.game.end_game()
         else:
-            raise InvalidQuery("player not in lobby")
+            raise LobbyError("player not in lobby")
 
     @staticmethod
     def selected_cards(form):
@@ -194,7 +198,7 @@ class Lobby:
             else:
                 raise InvalidQuery("not your turn")
         else:
-            raise InvalidQuery("cannot ready a player which is not in lobby")
+            raise LobbyError("cannot ready a player which is not in lobby")
 
 
 lobbies = {}
@@ -232,7 +236,7 @@ def post_lobby_create():
 
         return post_lobby_join(lobby_id)
     else:
-        raise InvalidQuery("did not include number of players or meld threshold")
+        raise LobbyError("did not include number of players or meld threshold")
 
 
 @app.get("/lobby/<lobby_id>")
@@ -254,7 +258,7 @@ def get_lobby(lobby_id):
         else:
             return render_template("lobby_prepared.html", **context)
     else:
-        raise InvalidQuery("lobby not available")
+        raise LobbyError("lobby not available")
 
 
 @app.post("/lobby/<lobby_id>/join")
@@ -270,9 +274,9 @@ def post_lobby_join(lobby_id):
                 response.set_cookie("session_id", session_id)
             return response
         else:
-            raise InvalidQuery("lobby is full")
+            raise LobbyError("lobby is full")
     else:
-        raise InvalidQuery("lobby not available")
+        raise LobbyError("lobby not available")
 
 
 @app.post("/lobby/<lobby_id>/leave")
@@ -290,7 +294,7 @@ def post_lobby_leave(lobby_id):
         else:
             return redirect(url_for("get_lobby", lobby_id=lobby_id))
     else:
-        raise InvalidQuery("lobby not available")
+        raise LobbyError("lobby not available")
 
 
 @app.post("/lobby/<lobby_id>/ready")
@@ -303,7 +307,7 @@ def post_lobby_ready(lobby_id):
 
         return redirect(url_for("get_lobby", lobby_id=lobby_id))
     else:
-        raise InvalidQuery("lobby not available")
+        raise LobbyError("lobby not available")
 
 
 @app.post("/lobby/<lobby_id>/act")
@@ -316,7 +320,7 @@ def post_lobby_act(lobby_id):
 
         return redirect(url_for("get_lobby", lobby_id=lobby_id))
     else:
-        raise InvalidQuery("lobby not available")
+        raise LobbyError("lobby not available")
 
 
 @app.get("/lobby/<lobby_id>/state")
@@ -327,7 +331,7 @@ def get_lobby_state(lobby_id):
     if lobby is not None and session_found:
         return {"ticks": lobby.ticks}
     else:
-        raise InvalidQuery("lobby not available")
+        raise LobbyError("lobby not available")
 
 
 @app.get("/lobby/<lobby_id>/game_state")
@@ -338,7 +342,7 @@ def get_lobby_game_state(lobby_id):
     if lobby is not None and session_found:
         return {"num_actions": lobby.game.num_actions, "state": lobby.game.state}
     else:
-        raise InvalidQuery("lobby not available")
+        raise LobbyError("lobby not available")
 
 
 @app.context_processor

@@ -1,3 +1,7 @@
+class LobbyError(Exception):
+    pass
+
+
 class InvalidQuery(Exception):
     pass
 
