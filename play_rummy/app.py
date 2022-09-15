@@ -3,9 +3,17 @@ from os import urandom
 from time import time
 
 from flask import Flask, flash, redirect, render_template, request, url_for
-from play_rummy.exceptions import IllegalAction, InvalidQuery
+from play_rummy.exceptions import IllegalAction, InvalidMeld, InvalidQuery
 
-from play_rummy.game import DiscardAction, Game, MeldAction, PickUpAction, PickUpTarget
+from play_rummy.game import (
+    Card,
+    DiscardAction,
+    Game,
+    MeldAction,
+    PickUpAction,
+    PickUpTarget,
+    SwapAction,
+)
 
 app = Flask(__name__)
 app.secret_key = "1"
@@ -25,6 +33,12 @@ def handle_invalid_query(e):
 
 
 @app.errorhandler(IllegalAction)
+def handle_illegal_action(e):
+    flash(str(e), "error")
+    return redirect(request.referrer)
+
+
+@app.errorhandler(InvalidMeld)
 def handle_illegal_action(e):
     flash(str(e), "error")
     return redirect(request.referrer)
@@ -116,13 +130,13 @@ class Lobby:
             raise InvalidQuery("player not in lobby")
 
     @staticmethod
-    def selected_card_ids(form):
-        return [int(card_id) for card_id in form.getlist("selected_card_id")]
+    def selected_cards(form):
+        return [Card(int(card_id)) for card_id in form.getlist("selected_card_id")]
 
     def interpret_action(self, form):
         action_sort = form.get("action_sort")
 
-        action_sorts = {"pick_up", "meld", "discard"}
+        action_sorts = {"pick_up", "meld", "discard", "swap"}
         pick_up_targets = {"deck": PickUpTarget.DECK, "discard": PickUpTarget.DISCARD}
 
         if action_sort in action_sorts:
@@ -136,21 +150,28 @@ class Lobby:
                         "pick-up action target is not provided or unknown"
                     )
             elif action_sort == "meld":
-                card_ids = Lobby.selected_card_ids(form)
+                cards = Lobby.selected_cards(form)
 
-                if len(card_ids) > 0:
-                    return MeldAction(card_ids)
+                if len(cards) > 0:
+                    return MeldAction(cards)
                 else:
                     raise InvalidQuery("must select cards for a meld")
             elif action_sort == "discard":
-                card_ids = Lobby.selected_card_ids(form)
+                cards = Lobby.selected_cards(form)
 
-                if len(card_ids) == 1:
-                    return DiscardAction(card_ids[0])
-                elif len(card_ids) == 0:
+                if len(cards) == 1:
+                    return DiscardAction(cards[0])
+                elif len(cards) == 0:
                     raise InvalidQuery("must select a card to discard")
                 else:
                     raise InvalidQuery("can only discard one card per turn")
+            elif action_sort == "swap":
+                cards = Lobby.selected_cards(form)
+
+                if len(cards) > 0:
+                    return SwapAction(cards)
+                else:
+                    raise InvalidQuery("must select cards to swap")
         else:
             raise InvalidQuery("action sort is not provided or unknown")
 

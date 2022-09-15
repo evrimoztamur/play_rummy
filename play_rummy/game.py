@@ -1,6 +1,7 @@
 import random
 import sys
 from enum import Enum
+import itertools
 
 from play_rummy.exceptions import IllegalAction, InvalidMeld, InvalidQuery
 
@@ -186,13 +187,11 @@ class Card:
                 print(f"{i: >2} {card.pretty()}  ", end="")
 
     def __hash__(self):
-        return hash((self.suit, self.rank))
+        return hash(self.card_id)
 
     def __eq__(self, other):
         if isinstance(other, Card):
-            return self.__hash__() == other.__hash__() and not (
-                self.is_joker and other.is_joker
-            )
+            return self.__hash__() == other.__hash__()
 
         return NotImplemented
 
@@ -245,61 +244,55 @@ class PickUpAction(Action):
 
 
 class MeldAction(Action):
-    def __init__(self, card_indices) -> None:
-        self.card_indices = card_indices
+    def __init__(self, cards) -> None:
+        self.cards = cards
 
     def __str__(self) -> str:
-        return f"<Action Meld {self.card_indices}>"
+        return f"<Action Meld {self.cards}>"
 
     def validate(self, game):
-        meld = [game.hands[game.mover][i] for i in self.card_indices]
+        if set(self.cards) > set(game.hands[game.mover]):
+            raise IllegalAction("not all cards are in hand")
 
-        self.meld_data = None
+        self.meld = None
 
         try:
-            self.meld_data = Game.validate_set(meld)
+            self.meld = Game.validate_set(self.cards)
         except InvalidMeld:
             pass
 
         try:
-            runs = Game.discover_runs(meld)
-
-            if len(runs) > 1:
-                self.meld_data = max(*runs, key=lambda meld: meld.score)
-            else:
-                self.meld_data = runs[0]
+            self.meld = Game.discover_run(self.cards)
         except InvalidMeld:
             pass
 
-        if not self.meld_data:
+        if not self.meld:
             raise IllegalAction("no valid meld for selected cards")
 
         has_melds = len(game.melds[game.mover]) > 0
-        meld_above_threshold = self.meld_data.score >= game.meld_threshold
+        meld_above_threshold = self.meld.score >= game.meld_threshold
 
-        if self.meld_data and not has_melds and not meld_above_threshold:
+        if self.meld and not has_melds and not meld_above_threshold:
             raise IllegalAction(
-                f"first meld score not high enough (${self.meld_data.score} < ${game.meld_threshold})"
+                f"first meld score not high enough (${self.meld.score} < ${game.meld_threshold})"
             )
 
     def execute(self, game):
         self.validate(game)
 
         game.hands[game.mover] = [
-            card
-            for i, card in enumerate(game.hands[game.mover])
-            if i not in self.card_indices
+            card for card in game.hands[game.mover] if card not in self.cards
         ]
 
-        game.melds[game.mover].append(self.meld_data)
+        game.melds[game.mover].append(self.meld)
 
 
 class DiscardAction(Action):
-    def __init__(self, card_index) -> None:
-        self.card_index = card_index
+    def __init__(self, card) -> None:
+        self.card = card
 
     def __str__(self) -> str:
-        return f"<Action Discard {self.card_index}>"
+        return f"<Action Discard {self.card}>"
 
     def validate(self, game):
         turn = game.turns[-1]
@@ -307,8 +300,10 @@ class DiscardAction(Action):
         if not Game.turn_contains(turn, PickUpAction):
             raise IllegalAction("did not pick up a card")
 
-        if self.card_index >= len(game.hands[game.mover]):
-            raise IllegalAction("card index out of range")
+        try:
+            self.card_index = game.hands[game.mover].index(self.card)
+        except ValueError:
+            raise IllegalAction("card not in hand")
 
     def execute(self, game):
         self.validate(game)
@@ -316,6 +311,66 @@ class DiscardAction(Action):
         discarded_card = game.hands[game.mover].pop(self.card_index)
 
         game.discard_pile.append(discarded_card)
+
+
+class SwapAction(Action):
+    def __init__(self, cards) -> None:
+        self.cards = cards
+
+    def __str__(self) -> str:
+        return f"<Action Swap {self.cards}>"
+
+    def validate(self, game):
+        if len(game.melds[game.mover]) == 0:
+            raise InvalidQuery("you must open your first meld to swap")
+
+        if len(self.cards) != 2:
+            raise InvalidQuery("must select two cards to swap")
+
+        if self.cards[0].is_joker:
+            self.meld_card = self.cards[0]
+            self.hand_card = self.cards[1]
+        elif self.cards[1].is_joker:
+            self.hand_card = self.cards[0]
+            self.meld_card = self.cards[1]
+        else:
+            raise IllegalAction("one of the swapped cards must be a joker")
+
+        try:
+            self.hand_card_index = game.hands[game.mover].index(self.hand_card)
+        except ValueError:
+            raise IllegalAction("non-joker card not in hand")
+
+        for i, meld_group in enumerate(game.melds):
+            for j, meld in enumerate(meld_group):
+                if self.meld_card in meld.cards:
+                    self.meld = meld
+                    self.meld_location = (i, j)
+                    return self.test_meld()
+        else:
+            raise IllegalAction("meld card not in a meld")
+
+    def test_meld(self):
+        if isinstance(self.meld, SetData):
+            self.new_meld = Game.validate_set(
+                [
+                    self.hand_card if card == self.meld_card else card
+                    for card in self.meld.cards
+                ]
+            )
+        elif isinstance(self.meld, RunData):
+            self.new_meld = Game.discover_run(
+                [
+                    self.hand_card if card == self.meld_card else card
+                    for card in self.meld.cards
+                ]
+            )
+
+    def execute(self, game):
+        self.validate(game)
+
+        game.melds[self.meld_location[0]][self.meld_location[1]] = self.new_meld
+        game.hands[game.mover][self.hand_card_index] = self.meld_card
 
 
 class GameState:
@@ -544,3 +599,12 @@ class Game:
             raise InvalidMeld("no valid run possible")
 
         return runs
+
+    @staticmethod
+    def discover_run(cards):
+        runs = Game.discover_runs(cards)
+
+        if len(runs) > 1:
+            return max(*runs, key=lambda meld: meld.score)
+        else:
+            return runs[0]

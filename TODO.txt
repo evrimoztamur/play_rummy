@@ -2,10 +2,13 @@ TODO
 
 Implement further game rules
     Layoffs (discard to table meld)
-    Joker swapping
 
 Polishing
     Better display for turn list on game end
+
+15 Sep 2022
+Refactor actions to use card IDs instead of indices
+Implement joker swapping and test in games
 
 11 Sep 2022
 
