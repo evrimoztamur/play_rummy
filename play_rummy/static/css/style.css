@@ -5,7 +5,8 @@ html {
 body {
     font-size: 14px;
     font-weight: 500;
-    width: 40rem;
+    max-width: 40rem;
+    padding: 1.5rem 2rem;
     margin: auto;
 }
 
@@ -154,8 +155,13 @@ input[name="selected_card_id"]:checked+label div.card {
     box-shadow: 0 0 .25rem powderblue;
 }
 
+div.deck {
+    margin-right: 3rem;
+}
+
 div.deck.deck-small {
     margin: .25rem;
+    margin-right: 1.5rem;
 }
 
 div.deck.deck-small div.card {
