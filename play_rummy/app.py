@@ -13,6 +13,7 @@ from play_rummy.game import (
     PickUpAction,
     PickUpTarget,
     SwapAction,
+    LayOffAction
 )
 
 app = Flask(__name__)
@@ -136,7 +137,7 @@ class Lobby:
     def interpret_action(self, form):
         action_sort = form.get("action_sort")
 
-        action_sorts = {"pick_up", "meld", "discard", "swap"}
+        action_sorts = {"pick_up", "meld", "discard", "swap", "lay_off"}
         pick_up_targets = {"deck": PickUpTarget.DECK, "discard": PickUpTarget.DISCARD}
 
         if action_sort in action_sorts:
@@ -172,6 +173,13 @@ class Lobby:
                     return SwapAction(cards)
                 else:
                     raise InvalidQuery("must select cards to swap")
+            elif action_sort == "lay_off":
+                cards = Lobby.selected_cards(form)
+
+                if len(cards) > 0:
+                    return LayOffAction(cards)
+                else:
+                    raise InvalidQuery("must select cards to lay off")
         else:
             raise InvalidQuery("action sort is not provided or unknown")
 

@@ -328,8 +328,8 @@ class SwapAction(Action):
             raise InvalidQuery("must select two cards to swap")
 
         if self.cards[0].is_joker:
-            self.meld_card = self.cards[0]
             self.hand_card = self.cards[1]
+            self.meld_card = self.cards[0]
         elif self.cards[1].is_joker:
             self.hand_card = self.cards[0]
             self.meld_card = self.cards[1]
@@ -372,6 +372,57 @@ class SwapAction(Action):
         game.melds[self.meld_location[0]][self.meld_location[1]] = self.new_meld
         game.hands[game.mover][self.hand_card_index] = self.meld_card
 
+class LayOffAction(Action):
+    def __init__(self, cards) -> None:
+        self.cards = cards
+
+    def __str__(self) -> str:
+        return f"<Action Swap {self.cards}>"
+
+    def validate(self, game):
+        if len(game.melds[game.mover]) == 0:
+            raise InvalidQuery("you must open your first meld to lay off")
+
+        if len(self.cards) != 2:
+            raise InvalidQuery("must select one card from your hand and one from the meld to lay off")
+
+        if self.cards[0] in game.hands[game.mover]:
+            self.hand_card = self.cards[0]
+            self.meld_card = self.cards[1]
+        elif self.cards[1] in game.hands[game.mover]:
+            self.hand_card = self.cards[1]
+            self.meld_card = self.cards[0]
+        else:
+            raise IllegalAction("one of the cards must be in your hand")
+
+        for i, meld_group in enumerate(game.melds):
+            for j, meld in enumerate(meld_group):
+                if self.meld_card in meld.cards:
+                    self.meld = meld
+                    self.meld_location = (i, j)
+                    return self.test_meld()
+        else:
+            raise IllegalAction("meld card not in a meld")
+
+    def test_meld(self):
+        if isinstance(self.meld, SetData):
+            self.new_meld = Game.validate_set(
+                [
+                    self.hand_card, *self.meld.cards
+                ]
+            )
+        elif isinstance(self.meld, RunData):
+            self.new_meld = Game.discover_run(
+                [
+                    self.hand_card, *self.meld.cards
+                ]
+            )
+
+    def execute(self, game):
+        self.validate(game)
+
+        game.melds[self.meld_location[0]][self.meld_location[1]] = self.new_meld
+        game.hands[game.mover].pop(game.hands[game.mover].index(self.hand_card))
 
 class GameState:
     PREPARED = 0
