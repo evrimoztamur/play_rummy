@@ -3,7 +3,7 @@ import sys
 from enum import Enum
 import itertools
 
-from play_rummy.exceptions import IllegalAction, InvalidMeld, InvalidQuery
+from play_rummy.exceptions import IllegalAction, InvalidMeld, GameError
 
 
 def eprint(message):
@@ -322,10 +322,10 @@ class SwapAction(Action):
 
     def validate(self, game):
         if len(game.melds[game.mover]) == 0:
-            raise InvalidQuery("you must open your first meld to swap")
+            raise GameError("you must open your first meld to swap")
 
         if len(self.cards) != 2:
-            raise InvalidQuery("must select two cards to swap")
+            raise GameError("must select two cards to swap")
 
         if self.cards[0].is_joker:
             self.hand_card = self.cards[1]
@@ -382,10 +382,10 @@ class LayOffAction(Action):
 
     def validate(self, game):
         if len(game.melds[game.mover]) == 0:
-            raise InvalidQuery("you must open your first meld to lay off")
+            raise GameError("you must open your first meld to lay off")
 
         if len(self.cards) != 2:
-            raise InvalidQuery(
+            raise GameError(
                 "must select one card from your hand and one from the meld to lay off"
             )
 
@@ -433,11 +433,11 @@ class Game:
 
     def __init__(self, num_players, meld_threshold=MELD_THRESHOLD) -> None:
         if not Game.PLAYER_LIMITS[0] <= num_players <= Game.PLAYER_LIMITS[1]:
-            raise InvalidQuery(
+            raise GameError(
                 f"number of players not within limits ({Game.PLAYER_LIMITS[0]} to {Game.PLAYER_LIMITS[1]})"
             )
         if not Game.THRESHOLD_LIMITS[0] <= meld_threshold <= Game.THRESHOLD_LIMITS[1]:
-            raise InvalidQuery(
+            raise GameError(
                 f"meld threshold not within limits ({Game.THRESHOLD_LIMITS[0]} to {Game.THRESHOLD_LIMITS[1]})"
             )
 

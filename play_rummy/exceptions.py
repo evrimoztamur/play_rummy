@@ -2,7 +2,7 @@ class LobbyError(Exception):
     pass
 
 
-class InvalidQuery(Exception):
+class GameError(Exception):
     pass
 
 

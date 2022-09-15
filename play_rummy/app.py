@@ -3,7 +3,7 @@ from os import urandom
 from time import time
 
 from flask import Flask, flash, redirect, render_template, request, url_for
-from play_rummy.exceptions import IllegalAction, InvalidMeld, InvalidQuery, LobbyError
+from play_rummy.exceptions import IllegalAction, InvalidMeld, GameError, LobbyError
 
 from play_rummy.game import (
     Card,
@@ -27,7 +27,7 @@ def make_token(nbytes=4):
     return b32encode(timestamp + tok).rstrip(b"=").decode("ascii").lower()
 
 
-@app.errorhandler(InvalidQuery)
+@app.errorhandler(GameError)
 def handle_invalid_query(e):
     flash(str(e), "error")
     return redirect(request.referrer)
@@ -48,6 +48,7 @@ def handle_invalid_meld(e):
 @app.errorhandler(LobbyError)
 def handle_lobby_error(e):
     return render_template("error.html", error=str(e)), 400
+
 
 class Player:
     def __init__(self, index) -> None:
@@ -151,7 +152,7 @@ class Lobby:
                 if action_target is not None:
                     return PickUpAction(action_target)
                 else:
-                    raise InvalidQuery(
+                    raise GameError(
                         "pick-up action target is not provided or unknown"
                     )
             elif action_sort == "meld":
@@ -160,32 +161,32 @@ class Lobby:
                 if len(cards) > 0:
                     return MeldAction(cards)
                 else:
-                    raise InvalidQuery("must select cards for a meld")
+                    raise GameError("must select cards for a meld")
             elif action_sort == "discard":
                 cards = Lobby.selected_cards(form)
 
                 if len(cards) == 1:
                     return DiscardAction(cards[0])
                 elif len(cards) == 0:
-                    raise InvalidQuery("must select a card to discard")
+                    raise GameError("must select a card to discard")
                 else:
-                    raise InvalidQuery("can only discard one card per turn")
+                    raise GameError("can only discard one card per turn")
             elif action_sort == "swap":
                 cards = Lobby.selected_cards(form)
 
                 if len(cards) > 0:
                     return SwapAction(cards)
                 else:
-                    raise InvalidQuery("must select cards to swap")
+                    raise GameError("must select cards to swap")
             elif action_sort == "lay_off":
                 cards = Lobby.selected_cards(form)
 
                 if len(cards) > 0:
                     return LayOffAction(cards)
                 else:
-                    raise InvalidQuery("must select cards to lay off")
+                    raise GameError("must select cards to lay off")
         else:
-            raise InvalidQuery("action sort is not provided or unknown")
+            raise GameError("action sort is not provided or unknown")
 
     def act_player(self, session_id, form):
         player = self.players.get(session_id)
@@ -196,7 +197,7 @@ class Lobby:
 
                 self.game.make_action(action)
             else:
-                raise InvalidQuery("not your turn")
+                raise GameError("not your turn")
         else:
             raise LobbyError("cannot ready a player which is not in lobby")
 
